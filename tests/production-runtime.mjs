@@ -150,13 +150,37 @@ assert(!sandbox.window.DTRProduction.POB_KEYS.includes('forja-del-vacio'), 'Forj
 
 
 const moduleIds = {
-  'deterrence-sanctum': ['recipe_scrap_advanced','recipe_milsal','recipe_fow_advanced'],
-  'ravenna-invicta': ['recipe_scrap_advanced','recipe_milsal','recipe_fow_advanced','ship_part_exotic'],
+  'deterrence-sanctum': ['recipe_fow_advanced','recipe_scrap_advanced','recipe_milsal'],
+  'ravenna-invicta': ['recipe_fow_advanced','recipe_scrap_advanced','recipe_milsal','ship_part_exotic'],
   'fort-torrelavega': ['recipe_gold_advanced','recipe_scrap_advanced']
 };
 for (const [key, ids] of Object.entries(moduleIds)) {
   const actual = Array.from(sandbox.window.DTRProduction.modulesFor(key), module=>module.recipeId);
   assert.deepEqual(actual, ids, key+' must show precisely its installed production modules');
+}
+// Desktop slot positions are explicit, while DOM order supports single-column mobile.
+const desiredLayout = {
+  'deterrence-sanctum': [
+    ['Food Rations','top-left'], ['Basic Alloy','top-right'],
+    ['Prototype Components','bottom-left']
+  ],
+  'ravenna-invicta': [
+    ['Food Rations','top-left'], ['Basic Alloy','top-right'],
+    ['Prototype Components','bottom-left'], ['Exotic Systems','bottom-right']
+  ],
+  'fort-torrelavega': [
+    ['Wildcat Gold','top-left'], ['Basic Alloy','top-right']
+  ]
+};
+for (const [key,expected] of Object.entries(desiredLayout)) {
+  appState.view=key;
+  if(!appState.bases.has(key)) appState.bases.set(key,base);
+  sandbox.window.DTRProduction.render();
+  const rendered=[...elements.productionGrid.innerHTML.matchAll(
+    /<article class="production-card" data-tone="[^"]+" data-layout-slot="([^"]+)"[\s\S]*?<h4>([^<]+)<\/h4>/g
+  )].map(([,slot,name])=>[name,slot]);
+  assert.deepEqual(rendered,expected,key+' must respect the production grid layout');
+  assert.equal(rendered.length,expected.length,key+' may not show empty dummy module cards');
 }
 const prototypeRecipe=catalog.recipes.find(entry=>entry.id==='recipe_milsal');
 const hydroRecipe=catalog.recipes.find(entry=>entry.id==='recipe_fow_advanced');

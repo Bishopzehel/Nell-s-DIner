@@ -1,4 +1,5 @@
-/* Compact Torrelavega production modules */
+/* DTR production modules. Shared desk layout: Food | Alloy / Prototypes | Exotics.
+   On Torrelavega, Wildcat Gold occupies Food's top-left slot instead. */
 .production-panel {
   margin-top: 14px;
   overflow: hidden;
@@ -22,6 +23,17 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+/* Explicit positions retain the same left/right meaning on every POB.
+   Absent modules do not render placeholder cards; on tablets and phones the
+   markup order becomes a compact single column. */
+@media (min-width: 981px) {
+  #productionGrid > .production-card[data-layout-slot="top-left"] { grid-column: 1; grid-row: 1; }
+  #productionGrid > .production-card[data-layout-slot="top-right"] { grid-column: 2; grid-row: 1; }
+  #productionGrid > .production-card[data-layout-slot="bottom-left"] { grid-column: 1; grid-row: 2; }
+  #productionGrid > .production-card[data-layout-slot="bottom-right"] { grid-column: 2; grid-row: 2; }
+  #productionGrid[data-modules="1"] > .production-card[data-layout-slot] { grid-column: 1 / -1; grid-row: 1; }
 }
 
 .production-card {

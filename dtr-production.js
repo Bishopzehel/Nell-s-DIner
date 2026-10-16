@@ -14,6 +14,7 @@
     recipeId: 'recipe_gold_advanced',
     code: 'MODULE-04',
     process: 'ADVANCED GOLD REFINING',
+    layoutSlot: 'top-left',
     preferredAlternatives: Object.freeze({ 2: 'commodity_mox_fuel' })
   });
 
@@ -21,6 +22,7 @@
     recipeId: 'recipe_scrap_advanced',
     code: 'MODULE-05',
     process: 'SCRAP SMELTER',
+    layoutSlot: 'top-right',
     preferredAlternatives: Object.freeze({
       1: 'commodity_mox_fuel',
       2: 'commodity_scrap_metal'
@@ -31,6 +33,7 @@
     recipeId: 'recipe_milsal',
     code: 'MODULE-06',
     process: 'MILITARY SALVAGE RECLAMATION',
+    layoutSlot: 'bottom-left',
     preferredAlternatives: Object.freeze({})
   });
 
@@ -38,6 +41,7 @@
     recipeId: 'recipe_fow_advanced',
     code: 'MODULE-07',
     process: 'HYDROPONICS BAY // ADVANCED',
+    layoutSlot: 'top-left',
     preferredAlternatives: Object.freeze({})
   });
 
@@ -45,12 +49,13 @@
     recipeId: 'ship_part_exotic',
     code: 'MODULE-08',
     process: 'SHIPYARD COMPONENT FABRICATION',
+    layoutSlot: 'bottom-right',
     preferredAlternatives: Object.freeze({})
   });
 
   const MODULES_BY_POB = Object.freeze({
-    'deterrence-sanctum': Object.freeze([SCRAP_MODULE, PROTOTYPE_MODULE, HYDROPONICS_MODULE]),
-    'ravenna-invicta': Object.freeze([SCRAP_MODULE, PROTOTYPE_MODULE, HYDROPONICS_MODULE, EXOTIC_MODULE]),
+    'deterrence-sanctum': Object.freeze([HYDROPONICS_MODULE, SCRAP_MODULE, PROTOTYPE_MODULE]),
+    'ravenna-invicta': Object.freeze([HYDROPONICS_MODULE, SCRAP_MODULE, PROTOTYPE_MODULE, EXOTIC_MODULE]),
     [TORRELAVEGA_KEY]: Object.freeze([GOLD_MODULE, SCRAP_MODULE])
   });
 
@@ -275,7 +280,7 @@
       ? `CORSAIR −${efficiency}% MATERIALS`
       : 'STANDARD MATERIAL LOAD';
 
-    return `<article class="production-card" data-tone="${snapshot.tone}">
+    return `<article class="production-card" data-tone="${snapshot.tone}" data-layout-slot="${esc(module.layoutSlot)}">
       <header>
         <div><small>${esc(module.code)} // ${esc(module.process)}</small><h4>${esc(snapshot.output?.name || 'PRODUCTION OUTPUT')}</h4></div>
         <span class="production-card-state" data-tone="${snapshot.tone}">${cardStatus(snapshot, base)}</span>
@@ -317,8 +322,8 @@
       subline.textContent = pobKey === TORRELAVEGA_KEY
         ? 'Wildcat Gold // Basic Alloy // live material capacity'
         : pobKey === 'ravenna-invicta'
-          ? 'Basic Alloy // Prototype Components // Food Rations // Exotic Systems'
-          : 'Basic Alloy // Prototype Components // Food Rations';
+          ? 'Food Rations // Basic Alloy // Prototype Components // Exotic Systems'
+          : 'Food Rations // Basic Alloy // Prototype Components';
     }
     if (grid?.dataset) grid.dataset.modules = String(moduleCount);
     if (grid?.style) grid.style.gridTemplateColumns = moduleCount === 1 ? '1fr' : '';

@@ -137,6 +137,12 @@ assert.match(production, /bestCapacityOption/, 'alternative production inputs mu
 assert.match(production, /DTRCalculator\.openRecipe/, 'production cost action must open a preselected calculator quote');
 assert.match(production, /class="production-materials"/, 'production cards must show their material list immediately');
 assert(!production.includes('<details'), 'production material lists must not be collapsed behind disclosure controls');
+assert.match(production, /data-layout-slot="\$\{esc\(module\.layoutSlot\)\}"/, 'production modules must identify their intended desktop slots');
+assert.match(productionCss, /data-layout-slot="top-left"\]\s*\{\s*grid-column:\s*1;\s*grid-row:\s*1;/, 'Food Rations must occupy top left');
+assert.match(productionCss, /data-layout-slot="top-right"\]\s*\{\s*grid-column:\s*2;\s*grid-row:\s*1;/, 'Basic Alloy must occupy top right');
+assert.match(productionCss, /data-layout-slot="bottom-left"\]\s*\{\s*grid-column:\s*1;\s*grid-row:\s*2;/, 'Prototype Components must occupy bottom left');
+assert.match(productionCss, /data-layout-slot="bottom-right"\]\s*\{\s*grid-column:\s*2;\s*grid-row:\s*2;/, 'Exotic Systems must occupy bottom right');
+assert.match(productionCss, /@media \(max-width: 980px\)\s*\{\s*#productionGrid\s*\{\s*grid-template-columns:\s*1fr;/, 'production slots must collapse to one column on tablets and phones');
 assert.match(production, /recipeId: 'recipe_milsal'/, 'Sanctum and Invicta must include Prototype Components');
 assert.match(production, /recipeId: 'recipe_fow_advanced'/, 'Sanctum and Invicta must include advanced Hydroponics');
 assert.match(production, /recipeId: 'ship_part_exotic'/, 'Invicta must include Exotic Systems production');
