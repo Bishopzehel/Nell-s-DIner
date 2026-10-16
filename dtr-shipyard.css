@@ -52,8 +52,11 @@
 .dtr-yard-table tbody th{font-weight:600}
 .dtr-yard-table tbody th strong{display:block;color:var(--gold);font-size:.89rem}
 .dtr-yard-table tbody th small{display:block;margin-top:4px;color:#82767f;font-size:.61rem;word-break:break-word}
+.dtr-yard-table tbody th .dtr-yard-supply{font:700 .62rem "Oxanium",sans-serif;letter-spacing:.045em;color:#a89ca4}
+.dtr-yard-table tr[data-supply="in-house"] .dtr-yard-supply{color:var(--good)}
 .dtr-yard-table td.dtr-yard-unit-price{color:var(--gold);font-weight:700}
 .dtr-yard-table td.dtr-yard-unit-price small{display:block;margin-top:4px;color:#92858e;font-size:.61rem;letter-spacing:.02em}
+.dtr-yard-table tr[data-supply="in-house"] td.dtr-yard-unit-price small{color:var(--good)}
 .dtr-yard-table tr:last-child th,.dtr-yard-table tr:last-child td{border-bottom:0}
 .dtr-yard-table tr[data-tone="danger"]{background:rgba(220,95,104,.05)}
 .dtr-yard-table tr[data-tone="warn"]{background:rgba(210,167,103,.035)}

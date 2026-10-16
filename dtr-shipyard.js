@@ -164,12 +164,16 @@
     return a.materials.map(row=>{
       const stockText=row.stock===null?'NOT REPORTED':fmt(row.stock);
       const gapText=row.gap===null?'—':row.gap===0?'READY':('+'+fmt(row.gap));
-      return '<tr data-tone="'+row.tone+'"><th scope="row"><strong>'+esc(row.name)+
-        '</strong><small>'+esc(row.id)+'</small></th>'+
+      const inHouse=row.id===EXOTIC_COMPONENT;
+      const supply=inHouse?'IN-HOUSE PRODUCTION':'EXTERNAL SUPPLY';
+      const priceLabel=inHouse?'POB SELL VALUE':'POB BUY PRICE';
+      return '<tr data-tone="'+row.tone+'" data-supply="'+(inHouse?'in-house':'external')+'">'+
+        '<th scope="row" title="'+esc(row.id)+'"><strong>'+esc(row.name)+
+        '</strong><small class="dtr-yard-supply">'+supply+'</small></th>'+
         '<td data-label="PER SHIP">'+fmt(row.required)+'</td>'+
         '<td data-label="POB STOCK">'+stockText+'</td>'+
         '<td data-label="UNIT VALUE" class="dtr-yard-unit-price">'+dollars(row.unitPrice)+
-          '<small>'+row.priceSource+'</small></td>'+
+          '<small>'+priceLabel+'</small></td>'+
         '<td data-label="NEXT SHIP">'+gapText+'</td></tr>';
     }).join('');
   }
@@ -200,8 +204,8 @@
           '</strong><span>'+esc(readiness)+'</span></div>'+
         '<div><small>BOTTLENECK / NEXT SHIP</small><strong>'+bottleneck+'</strong><span>'+
           (a.nextHull===null?'AWAITING COMPLETE STOCK FEED':'BUILD #'+fmt(a.nextHull))+'</span></div>'+
-        '<div><small>EST. MATERIAL COST</small><strong>'+dollars(a.materialCost)+'</strong><span>'+
-          (a.priceComplete?'BASE BUYS // EXOTIC: BASE SELLS':'BUY / SELL QUOTATION MISSING')+'</span></div>'+
+        '<div><small>EST. COMPONENT VALUE</small><strong>'+dollars(a.materialCost)+'</strong><span>'+
+          (a.priceComplete?'EXTERNAL BUY PRICE // IN-HOUSE SELL VALUE':'BUY / SELL QUOTATION MISSING')+'</span></div>'+
       '</div>'+
       '<div class="dtr-yard-components"><div class="dtr-yard-subhead"><strong>SHIP COMPONENTS</strong><span>LIVE INVICTA STOCK // NEXT BUILD</span></div>'+
       '<div class="dtr-yard-table-wrap"><table class="dtr-yard-table"><thead><tr><th>COMPONENT</th><th>PER SHIP</th><th>POB STOCK</th><th>UNIT VALUE</th><th>NEXT SHIP</th></tr></thead><tbody>'+

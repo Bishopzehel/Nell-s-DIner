@@ -96,7 +96,15 @@ assert.equal(exoticRow.unitPrice,50000,'Exotic Systems valuation must use Invict
 assert.equal(exoticRow.priceSource,'BASE SELLS','Exotic Systems must clearly identify sale-price valuation');
 assert.equal(m.materials.find(row=>row.id==='commodity_ship_part_reactor').unitPrice,10,'other inputs must keep BASE BUYS pricing');
 assert.equal(m.materials.find(row=>row.id==='commodity_ship_part_reactor').priceSource,'BASE BUYS');
-assert(elements.shipyardDetails.innerHTML.includes('BASE BUYS // EXOTIC: BASE SELLS'),'material estimate must label the hybrid quote');
+assert(elements.shipyardDetails.innerHTML.includes('EST. COMPONENT VALUE'),'material valuation must not be presented as manufacturing cost');
+assert(elements.shipyardDetails.innerHTML.includes('EXTERNAL BUY PRICE // IN-HOUSE SELL VALUE'),'summary must explain the two distinct valuation sources');
+assert(elements.shipyardDetails.innerHTML.includes('EXTERNAL SUPPLY'),'delivered components must be explicitly marked as external supply');
+assert(elements.shipyardDetails.innerHTML.includes('IN-HOUSE PRODUCTION'),'Exotic Systems must be marked as an in-house output');
+assert(elements.shipyardDetails.innerHTML.includes('POB BUY PRICE'),'external supply must show POB incoming quote');
+assert(elements.shipyardDetails.innerHTML.includes('POB SELL VALUE'),'Exotics must show the POB outgoing quote');
+assert(elements.shipyardDetails.innerHTML.includes('data-supply="in-house"'),'in-house component must carry its own style hook');
+assert(elements.shipyardDetails.innerHTML.includes('data-supply="external"'),'external components must carry their own style hook');
+assert(!elements.shipyardDetails.innerHTML.includes('EST. MATERIAL COST'),'misleading manufacturing cost label must be removed');
 assert(elements.shipyardDetails.innerHTML.includes('UNIT VALUE'),'shipyard must display actual per-component values');
 assert(elements.shipyardDetails.innerHTML.includes('$50,000'),'component table must show the Exotic quote');
 assert.equal(m.priceComplete,true);
@@ -119,6 +127,11 @@ assert(a.prerequisites.some(row=>row.id==='commodity_crew'&&row.required===400),
 assert(a.prerequisites.some(row=>row.id==='blueprint_medium_miner'&&row.required===1),
   'Archon requires a separately reported design schematic');
 assert.equal(a.materialCost,(180+138+223+197+205)*10,'retained schematics and crew must not enter material costs');
+assert(!yard.analyze(archon,base).materials.some(row=>row.id==='commodity_ship_part_exotic'),'Archon has no in-house Exotic component');
+yard.selectHull('archon');
+assert(!elements.shipyardDetails.innerHTML.includes('IN-HOUSE PRODUCTION'),'Archon components are entirely external supplies');
+assert(!elements.shipyardDetails.innerHTML.includes('POB SELL VALUE'),'Archon costs use only incoming POB buy quotations');
+yard.selectHull('murmillo');
 
 // A $1 BASE BUYS placeholder must not act as a fallback when Invicta
 // provides no outgoing Exotic Systems price.

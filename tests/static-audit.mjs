@@ -150,7 +150,12 @@ for (const hullRecipe of ['ship_assembly_dsy_venator', 'ship_assembly_dsy_legate
 }
 assert.match(yardSource, /DTRCalculator\?\.openRecipe/, 'shipyard must open DTR calculator with explicit POB and recipe');
 assert.match(yardSource, /EXOTIC_COMPONENT='commodity_ship_part_exotic'/, 'shipyard must identify the Exotic Systems valuation exception');
-assert.match(yardSource, /BASE BUYS \/\/ EXOTIC: BASE SELLS/, 'shipyard must disclose the differing Exotic Systems price source');
+assert.match(yardSource, /EXTERNAL BUY PRICE \/\/ IN-HOUSE SELL VALUE/, 'shipyard must disclose its two valuation sources');
+assert.match(yardSource, /EST\. COMPONENT VALUE/, 'shipyard valuation must not masquerade as raw production cost');
+assert.match(yardSource, /IN-HOUSE PRODUCTION/, 'shipyard must identify Exotic Systems as in-house production');
+assert.match(yardSource, /EXTERNAL SUPPLY/, 'shipyard must identify delivered components as external supply');
+assert.match(yardSource, /POB BUY PRICE/, 'external inputs must show the incoming quotation');
+assert.match(yardSource, /POB SELL VALUE/, 'in-house Exotics must show the outgoing valuation');
 assert.match(yardSource, /UNIT VALUE/, 'shipyard should display its individual component valuations');
 assert.match(calculator, /INVICTA_SHIPYARD_RECIPES/, 'calculator must implement the same Invicta-only ship pricing exception');
 assert.match(calculator, /INVICTA BASE SELLS \/\/ EXOTIC SYSTEMS/, 'calculator must label its Exotic Systems price direction');
