@@ -9,6 +9,11 @@
 .dtr-forum-hero h2{margin:0;color:var(--gold);font:600 clamp(1.5rem,3.5vw,2rem) "Oxanium",sans-serif}
 .dtr-forum-hero p:last-child{margin:7px 0 0;color:#a89aa1;font-size:.76rem;line-height:1.6}
 .dtr-forum-hero em{font:600 .73rem "Oxanium",sans-serif;letter-spacing:.08em;font-style:normal;color:var(--rose);border:1px solid rgba(189,70,82,.3);padding:12px}
+.dtr-forum-copy-feedback{display:block;margin:12px 0 0;padding:13px 15px;border:1px solid rgba(98,201,152,.45);background:rgba(98,201,152,.055);color:var(--good);font:700 .77rem/1.5 "Oxanium",sans-serif;letter-spacing:.06em;overflow-wrap:anywhere}
+.dtr-forum-copy-feedback[data-tone="warn"]{border-color:rgba(210,167,103,.55);background:rgba(210,167,103,.06);color:var(--warn)}
+.dtr-forum-copy-feedback[hidden]{display:none!important}
+.dtr-forum-actions button[data-copy-state="good"]{border-color:var(--good);color:var(--good);background:rgba(98,201,152,.12)}
+.dtr-forum-actions button[data-copy-state="warn"]{border-color:var(--warn);color:var(--warn)}
 .dtr-forum-lenses{display:none}
 .dtr-forum-grid{display:grid;grid-template-columns:minmax(0,1.07fr) minmax(0,.93fr);gap:12px;margin-top:13px;align-items:start}
 .dtr-forum-panel{min-width:0;overflow:hidden;border:1px solid rgba(157,48,57,.26);background:rgba(5,5,6,.92)}

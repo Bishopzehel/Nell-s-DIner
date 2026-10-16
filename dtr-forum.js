@@ -26,6 +26,7 @@
   let drafts = loadArray(KEYS.drafts);
   let identities = loadArray(KEYS.identities);
   let saveTimer = null;
+  let copyFeedbackTimer = null;
   let lens = readText(KEYS.lens, 'write');
   // Previous builds accidentally prefilled this personal Aurelio image for everyone.
   // Remove that inherited default once; explicitly re-entered URLs remain valid.
@@ -382,24 +383,88 @@
     if(!selection) area.setSelectionRange(start+pair[0].length,start+pair[0].length);
     area.focus();changed();
   }
-  async function copyCode() {
-    current=collect();render();
-    const value=buildBbcode(current);
+  // The generated BBCode panel is hidden on mobile WRITE/PREVIEW lenses.
+  // A temporary, selectable textarea keeps the legacy copy path usable in Samsung Internet.
+  function copyWithSelection(value) {
+    if (typeof document.execCommand !== 'function') return false;
+    const field=document.createElement('textarea');
+    field.value=value;
+    field.setAttribute('readonly','');
+    field.setAttribute('aria-hidden','true');
+    field.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;font-size:16px;';
+    const previous=document.activeElement;
     let copied=false;
     try {
-      if(navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(value);
-        copied=true;
-      }
-    }catch{}
-    if(!copied){
-      const code=$('dtrForumCode');
-      if(code) {
-        code.focus();code.select();
-        try {copied=Boolean(document.execCommand('copy'));}catch{}
+      document.body.appendChild(field);
+      field.focus({preventScroll:true});
+      field.select();
+      field.setSelectionRange?.(0,value.length);
+      copied=Boolean(document.execCommand('copy'));
+    } catch {
+      copied=false;
+    } finally {
+      field.remove();
+      if (previous?.isConnected) {
+        try {previous.focus({preventScroll:true});} catch {}
       }
     }
-    status(copied?'BB CODE COPIED // READY FOR FORUM':'COPY BLOCKED // SELECT CODE AND COPY MANUALLY',copied?'good':'warn');
+    return copied;
+  }
+
+  function showCopyFeedback(copied) {
+    const message=copied
+      ? 'BB CODE COPIED // READY TO PASTE IN DISCOVERY'
+      : 'AUTO-COPY BLOCKED // BB CODE SELECTED FOR MANUAL COPY';
+    const feedback=$('dtrForumCopyFeedback');
+    if (feedback) {
+      feedback.textContent=message;
+      feedback.dataset.tone=copied?'good':'warn';
+      feedback.hidden=false;
+    }
+    status(message,copied?'good':'warn');
+    const buttons=document.querySelectorAll('#forumView [data-forum-action="copy"]');
+    buttons.forEach(button=>{
+      button.textContent=copied?'COPIED ✓':'SELECTED // COPY';
+      button.dataset.copyState=copied?'good':'warn';
+    });
+    window.clearTimeout(copyFeedbackTimer);
+    copyFeedbackTimer=window.setTimeout(()=>{
+      if(feedback) feedback.hidden=true;
+      buttons.forEach(button=>{
+        button.textContent='COPY BB CODE';
+        delete button.dataset.copyState;
+      });
+    },4000);
+  }
+
+  async function copyCode() {
+    current=collect();
+    render();
+    const value=buildBbcode(current);
+    // Try synchronously during the click gesture. On some Android browsers,
+    // an asynchronous clipboard rejection consumes the required user activation.
+    let copied=copyWithSelection(value);
+    if (!copied && typeof navigator.clipboard?.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(value);
+        copied=true;
+      } catch {}
+    }
+    if (!copied) {
+      // Never try to copy from a hidden lens. Reveal and select real BBCode instead.
+      setLens('code');
+      const code=$('dtrForumCode');
+      if(code) {
+        try {
+          code.focus({preventScroll:true});
+          code.select();
+          code.setSelectionRange?.(0,code.value.length);
+          code.scrollIntoView?.({block:'nearest'});
+        } catch {}
+      }
+    }
+    showCopyFeedback(copied);
+    return copied;
   }
   function clearMessage() {
     current=collect();
