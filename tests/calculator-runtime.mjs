@@ -316,7 +316,7 @@ const invictaUnknown=calculatorHtml(invictaShipRecipe.id,invictaStock.map(item=>
     ?{...item,price_to_buy_from_base:null,dtrBaseSellPrice:null}
     :item
 ),1,{},'','ravenna-invicta');
-assert(invictaUnknown.includes('MATERIAL PRICES MISSING'),'a missing exotic sale price must block complete ship pricing');
+assert(invictaUnknown.includes('1 MATERIAL PRICE MISSING'),'a missing Exotic Systems selling quote must block a complete ship price');
 assert(!invictaUnknown.includes('$2,353'),'a $1 incoming buy offer must never be mistaken for the outgoing price');
 assert(invictaUnknown.includes('NO POB PRICE // ENTER MANUALLY'),'unreported exotic price should allow manual entry');
 const sanctuaryShip=calculatorHtml(invictaShipRecipe.id,invictaStock,1,{},'','deterrence-sanctum');
