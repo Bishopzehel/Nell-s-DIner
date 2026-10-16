@@ -7,18 +7,18 @@
     current: 'dtr:forum:current:v1',
     drafts: 'dtr:forum:drafts:v1',
     identities: 'dtr:forum:identities:v1',
-    lens: 'dtr:forum:lens:v1'
+    lens: 'dtr:forum:lens:v1',
+    personalImageMigrated: 'dtr:forum:personal-image-migrated:v1'
   });
   const ART = Object.freeze({
     top: 'https://i.imgur.com/6eYifrM.png',
-    left: 'https://i.imgur.com/VylZNj1.gif',
     right: 'https://i.imgur.com/QFFOGWY.png',
     footer: 'https://i.imgur.com/5RDPUdc.png'
   });
   const DEFAULT = Object.freeze({
     sender: '', role: '', location: '', recipient: '', encryption: '',
     subject: '', opening: '', message: '', closing: '', draftName: '',
-    topImage: ART.top, leftImage: ART.left, rightImage: ART.right, footerImage: ART.footer
+    topImage: ART.top, leftImage: '', rightImage: ART.right, footerImage: ART.footer
   });
   const COLORS = Object.freeze({line:'#84070c',label:'#ad0514',gold:'#ab8f66',text:'#DCDCDC'});
   const FIELDS = Object.keys(DEFAULT);
@@ -27,6 +27,9 @@
   let identities = loadArray(KEYS.identities);
   let saveTimer = null;
   let lens = readText(KEYS.lens, 'write');
+  // Previous builds accidentally prefilled this personal Aurelio image for everyone.
+  // Remove that inherited default once; explicitly re-entered URLs remain valid.
+  const LEGACY_PERSONAL_IMAGE = 'https://i.imgur.com/VylZNj1.gif';
   const $ = id => document.getElementById(id);
 
   function readText(key, fallback = '') {
@@ -44,6 +47,38 @@
   function store(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
   }
+
+  function removeInheritedImage(value) {
+    if (!value || typeof value !== 'object') return value;
+    return String(value.leftImage || '').trim() === LEGACY_PERSONAL_IMAGE
+      ? { ...value, leftImage: '' }
+      : value;
+  }
+
+  function migrateOldPersonalImage() {
+    // Do not repeat on later visits: somebody may intentionally use this URL.
+    if (readText(KEYS.personalImageMigrated) === '1') return;
+    const originalCurrent = current;
+    const originalDrafts = drafts;
+    const originalIdentities = identities;
+    current = removeInheritedImage(current);
+    drafts = drafts.map(entry => {
+      if (!entry?.state || typeof entry.state !== 'object') return entry;
+      const state = removeInheritedImage(entry.state);
+      return state === entry.state ? entry : { ...entry, state };
+    });
+    identities = identities.map(removeInheritedImage);
+    const changedCurrent = current !== originalCurrent;
+    const changedDrafts = drafts.some((entry, i) => entry !== originalDrafts[i]);
+    const changedIdentities = identities.some((entry, i) => entry !== originalIdentities[i]);
+    const saved = (!changedCurrent || store(KEYS.current, current))
+      && (!changedDrafts || store(KEYS.drafts, drafts))
+      && (!changedIdentities || store(KEYS.identities, identities));
+    if (saved) {
+      try { localStorage.setItem(KEYS.personalImageMigrated, '1'); } catch {}
+    }
+  }
+
   function esc(text) {
     return String(text ?? '').replace(/[&<>"']/g, char => ({
       '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
@@ -288,7 +323,7 @@
     current=collect();
     const name=current.sender.trim();
     if (!name) return status('ENTER SENDER NAME FIRST','warn');
-    const person={sender:name,role:current.role,location:current.location,closing:current.closing};
+    const person={sender:name,role:current.role,location:current.location,closing:current.closing,leftImage:current.leftImage};
     const index=identities.findIndex(i=>i.sender.toLowerCase()===name.toLowerCase());
     if(index<0) identities.push(person);
     else identities[index]=person;
@@ -302,7 +337,7 @@
     const profile=identities[Number(value)];
     if(!profile) return;
     current=collect();
-    ['sender','role','location','closing'].forEach(key => { current[key]=profile[key]||''; });
+    ['sender','role','location','closing','leftImage'].forEach(key => { current[key]=profile[key]||''; });
     setFields(current);render();persistSoon();status('SENDER PROFILE LOADED');
   }
   function removeSender() {
@@ -405,6 +440,7 @@
     });
     status('LOCAL AUTOSAVE ACTIVE');
   }
+  migrateOldPersonalImage();
   window.DTRForum=Object.freeze({buildBbcode,previewMarkup,cleanState,defaultState:()=>cleanState(DEFAULT),render,getState:()=>({...current}),setLens});
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();

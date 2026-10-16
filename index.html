@@ -126,6 +126,7 @@
             <label class="dtr-forum-field wide"><span>LOAD SAVED SENDER</span><select id="dtrForumSenderList"><option value="">CUSTOM / ENTER SENDER</option></select><small>ANY CHARACTER MAY SEND. PROFILES ARE STORED ON THIS DEVICE.</small></label>
             <label class="dtr-forum-field"><span>SENDER ID</span><input id="dtrForum_sender" data-forum-field maxlength="100" placeholder="Character or organisation name"></label>
             <label class="dtr-forum-field"><span>ROLE / SIGNATURE TITLE</span><input id="dtrForum_role" data-forum-field maxlength="110" placeholder="Optional rank or title"></label>
+            <label class="dtr-forum-field wide"><span>PERSONAL SENDER IMAGE / LEFT (OPTIONAL)</span><input id="dtrForum_leftImage" data-forum-field inputmode="url" type="url" placeholder="https://example.com/your-character.gif"><small>PASTE YOUR OWN CHARACTER IMAGE OR GIF URL. LEFT BLANK BY DEFAULT. SAVED WITH THE SENDER PROFILE.</small></label>
             <label class="dtr-forum-field"><span>LOCATION</span><input id="dtrForum_location" data-forum-field maxlength="150" placeholder="Origin of transmission"></label>
             <label class="dtr-forum-field"><span>RECIPIENT</span><input id="dtrForum_recipient" data-forum-field maxlength="160" placeholder="Recipient / office / organisation"></label>
             <label class="dtr-forum-field"><span>ENCRYPTION</span><input id="dtrForum_encryption" data-forum-field maxlength="130" placeholder="High Encryption / Open Channel / etc."></label>
@@ -147,10 +148,9 @@
             <label class="dtr-forum-field"><span>DRAFT NAME</span><input id="dtrForum_draftName" data-forum-field maxlength="100" placeholder="For your local draft archive"></label>
             <details class="dtr-forum-advanced">
               <summary>VISUAL SETTINGS // IMAGE URLS</summary>
-              <p class="dtr-forum-image-note">Corsair template images are preset but editable. Clear a field to omit an image.</p>
+              <p class="dtr-forum-image-note">Shared Corsair banners and decorations are prefilled here. Your character image is configured separately above, per sender.</p>
               <div class="dtr-forum-fields">
                 <label class="dtr-forum-field wide"><span>TOP BANNER</span><input id="dtrForum_topImage" data-forum-field inputmode="url" placeholder="https://..."></label>
-                <label class="dtr-forum-field"><span>LEFT DECORATION</span><input id="dtrForum_leftImage" data-forum-field inputmode="url" placeholder="https://..."></label>
                 <label class="dtr-forum-field"><span>RIGHT DECORATION</span><input id="dtrForum_rightImage" data-forum-field inputmode="url" placeholder="https://..."></label>
                 <label class="dtr-forum-field wide"><span>FOOTER IMAGE</span><input id="dtrForum_footerImage" data-forum-field inputmode="url" placeholder="https://..."></label>
               </div>

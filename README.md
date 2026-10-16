@@ -34,7 +34,7 @@ Mobile-first operational dashboard for the DTR faction's three active player-own
 
 ## Forum transmissions
 
-The **FORUM** workspace is a neutral Corsair transmission composer based on the supplied Montserrat / crimson / gold BBCode format. Sender ID, role, location, recipient, encryption, optional subject/opening/sign-off and top/side/footer artwork URLs are freely editable. The four Corsair image URLs are editable defaults, not a fixed Aurelio character profile.
+The **FORUM** workspace is a neutral Corsair transmission composer based on the supplied Montserrat / crimson / gold BBCode format. Sender ID, role, location, recipient, encryption, optional subject/opening/sign-off and top/side/footer artwork URLs are freely editable. The shared Corsair top banner, right decoration and footer are editable defaults. The left-side character image is deliberately blank and is saved with the individual sender profile; no character picture is included by default. A one-time migration clears the previously inherited Aurelio GIF from legacy local work without deleting the rest of an existing draft.
 
 WRITE, PREVIEW and BB CODE panes follow RHW's composer workflow. The module supports live preview, one-click copy, BBCode formatting shortcuts, spoilers and image links, browser-local autosave, named draft saves and reusable sender identities. None of that content is posted to the forum or uploaded to GitHub. The user pastes the generated BBCode into their forum post manually.
 
