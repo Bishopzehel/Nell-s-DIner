@@ -129,6 +129,11 @@
       const src = safeUrl(url.replace(/&amp;/g, '&'));
       return src ? '<img src="' + esc(src) + '" alt="Forum attachment" loading="lazy">' : '[IMAGE]';
     });
+    html = html.replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi, '<blockquote class="dtr-forum-preview-quote">$1</blockquote>');
+    html = html.replace(/\[list\]([\s\S]*?)\[\/list\]/gi, (_match, inner) => {
+      const entries = String(inner).split(/\[\*\]/gi).slice(1).map(line=>line.trim()).filter(Boolean);
+      return entries.length ? '<ul class="dtr-forum-preview-list">' + entries.map(line=>'<li>'+line+'</li>').join('') + '</ul>' : inner;
+    });
     [['b','strong'], ['i','em'], ['u','u'], ['s','s']].forEach(([tag, htmlTag]) => {
       const re = new RegExp('\\[' + tag + '\\]([\\s\\S]*?)\\[\\/' + tag + '\\]', 'gi');
       html = html.replace(re, '<' + htmlTag + '>$1</' + htmlTag + '>');
@@ -214,8 +219,8 @@
   function persistSoon() {
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => {
-      status(store(KEYS.current, current) ? 'LOCAL AUTOSAVE ACTIVE' : 'LOCAL STORAGE UNAVAILABLE',
-        'good');
+      const saved=store(KEYS.current,current);
+      status(saved ? 'LOCAL AUTOSAVE ACTIVE' : 'LOCAL STORAGE UNAVAILABLE',saved ? 'good' : 'danger');
     }, 320);
   }
   function changed() {
@@ -273,6 +278,7 @@
     if (!selector?.value) return status('CHOOSE A DRAFT FIRST','warn');
     const index=Number(selector.value);
     if (!drafts[index]) return;
+    if (typeof window.confirm === 'function' && !window.confirm('Delete this saved transmission draft?')) return;
     drafts.splice(index,1);
     const ok=store(KEYS.drafts,drafts);
     refreshLists();
@@ -303,6 +309,7 @@
     const select=$('dtrForumSenderList');
     if(!select?.value) return status('CHOOSE A SAVED SENDER FIRST','warn');
     if(!identities[Number(select.value)]) return;
+    if(typeof window.confirm === 'function' && !window.confirm('Delete this saved sender profile?')) return;
     identities.splice(Number(select.value),1);
     const ok=store(KEYS.identities,identities);
     refreshLists();
@@ -313,7 +320,7 @@
     lens=next;
     const root=$('forumView');
     if(root) root.dataset.forumLens=next;
-    document.querySelectorAll('[data-forum-lens]').forEach(button=>{
+    document.querySelectorAll('#forumView button[data-forum-lens]').forEach(button=>{
       const active=button.dataset.forumLens===next;
       button.setAttribute('aria-selected',String(active));
       button.tabIndex=active?0:-1;
@@ -360,6 +367,7 @@
   }
   function clearMessage() {
     current=collect();
+    if(current.message.trim() && typeof window.confirm === 'function' && !window.confirm('Clear the current message? Sender and recipient fields will stay.')) return;
     current.message='';
     setFields(current);render();persistSoon();
     status('MESSAGE CLEARED // SENDER SETTINGS KEPT');

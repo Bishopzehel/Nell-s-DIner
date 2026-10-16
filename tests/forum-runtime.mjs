@@ -50,4 +50,7 @@ const bare=api.buildBbcode({...defaults,topImage:'',leftImage:'',rightImage:'',f
 assert(!bare.includes('[img]'),'all art must be optional');
 const unsafe=api.previewMarkup({...state,topImage:'javascript:alert(1)'});
 assert(!unsafe.includes('src="javascript:'),'preview must reject script URL');
+const formats=api.previewMarkup({...state,message:'[quote]A quoted transmission[/quote]\n\n[list]\n[*]First\n[*]Second\n[/list]'});
+assert(formats.includes('dtr-forum-preview-quote'),'preview must render quote markup');
+assert(formats.includes('dtr-forum-preview-list'),'preview must render BBCode lists');
 console.log('DTR forum runtime audit passed (neutral BBCode, meta, image, spoiler and escape tests).');

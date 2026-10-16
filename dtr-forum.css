@@ -65,6 +65,9 @@
 .dtr-forum-preview-indented h4{margin:13px 0 7px;color:#d9a1a8;font-size:1rem}
 .dtr-forum-preview-indented img{display:inline-block;max-width:min(100%,440px);height:auto;margin:5px}
 .dtr-forum-preview-indented a{color:#c8ae82;text-decoration:underline;text-underline-offset:3px}
+.dtr-forum-preview-quote{margin:12px 0;padding:10px 13px;border-left:3px solid #84070c;background:rgba(157,48,57,.08);color:#dacbd0}
+.dtr-forum-preview-list{margin:12px 0;padding-left:26px}
+.dtr-forum-preview-list li{margin:4px 0}
 .dtr-forum-preview-signoff{display:grid;justify-items:end;gap:2px;margin-top:22px;text-align:right}
 .dtr-forum-preview-signoff p{justify-self:start;margin-bottom:13px}
 .dtr-forum-preview-signoff span{color:#b5a5ad;font-size:.77rem}
