@@ -18,7 +18,7 @@
   const DEFAULT = Object.freeze({
     sender: '', role: '', location: '', recipient: '', encryption: '',
     subject: '', opening: '', message: '', closing: '', draftName: '',
-    topImage: ART.top, leftImage: '', rightImage: ART.right, footerImage: ART.footer
+    topImage: ART.top, leftImage: '', footerImage: ART.footer
   });
   const COLORS = Object.freeze({line:'#84070c',label:'#ad0514',gold:'#ab8f66',text:'#DCDCDC'});
   const FIELDS = Object.keys(DEFAULT);
@@ -38,7 +38,7 @@
   function loadObject(key, fallback) {
     try {
       const value = JSON.parse(localStorage.getItem(key) || 'null');
-      return value && typeof value === 'object' && !Array.isArray(value) ? { ...fallback, ...value } : { ...fallback };
+      return value && typeof value === 'object' && !Array.isArray(value) ? cleanState(value) : cleanState(fallback);
     } catch { return { ...fallback }; }
   }
   function loadArray(key) {
@@ -131,7 +131,7 @@
 
     if (imgBbcode(s.topImage)) result.push('[align=center]' + imgBbcode(s.topImage) + '[/align]');
     const left = imgBbcode(s.leftImage, ' float=left');
-    const right = imgBbcode(s.rightImage, ' float=right');
+    const right = imgBbcode(ART.right, ' float=right');
     if (left || right) result.push(left + right);
     result.push('[hrc]' + line + '[/hrc][hrc]' + line + '[/hrc][pi amount=25]');
     [
@@ -209,11 +209,14 @@
     if (s.subject.trim()) rows.push(['Subject',s.subject]);
     return '<article class="dtr-forum-render">' +
       '<div class="dtr-forum-preview-art">' +
-        picture(s.topImage,'dtr-forum-preview-logo','Corsair header') +
-        '<div class="dtr-forum-preview-side">' + picture(s.leftImage,'','Left Corsair decoration') + picture(s.rightImage,'','Right Corsair decoration') + '</div>' +
+        picture(s.topImage,'dtr-forum-preview-logo','Corsair transmission banner') +
       '</div>' +
       '<div class="dtr-forum-rules"></div>' +
-      '<div class="dtr-forum-preview-meta">' + rows.map(row => '<div><strong>' + esc(row[0]) + '</strong><span>' + esc(row[1]) + '</span></div>').join('') + '</div>' +
+      '<div class="dtr-forum-preview-header">' +
+        '<div class="dtr-forum-preview-portrait-slot">' + picture(s.leftImage,'dtr-forum-preview-portrait','Sender character portrait') + '</div>' +
+        '<div class="dtr-forum-preview-meta">' + rows.map(row => '<div><strong>' + esc(row[0]) + '</strong><span>' + esc(row[1]) + '</span></div>').join('') + '</div>' +
+        '<div class="dtr-forum-preview-crest-slot">' + picture(ART.right,'dtr-forum-preview-crest','Fixed DTR Corsair serpent emblem') + '</div>' +
+      '</div>' +
       '<div class="dtr-forum-rules"></div>' +
       '<div class="dtr-forum-preview-message">' +
         (s.opening.trim() ? '<p class="dtr-forum-opening">' + inlinePreview(s.opening) + '</p>' : '') +
