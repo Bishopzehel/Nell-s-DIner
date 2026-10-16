@@ -137,6 +137,19 @@ assert.match(production, /bestCapacityOption/, 'alternative production inputs mu
 assert.match(production, /DTRCalculator\.openRecipe/, 'production cost action must open a preselected calculator quote');
 assert.match(production, /class="production-materials"/, 'production cards must show their material list immediately');
 assert(!production.includes('<details'), 'production material lists must not be collapsed behind disclosure controls');
+assert.match(production, /recipeId: 'recipe_milsal'/, 'Sanctum and Invicta must include Prototype Components');
+assert.match(production, /recipeId: 'recipe_fow_advanced'/, 'Sanctum and Invicta must include advanced Hydroponics');
+assert.match(production, /recipeId: 'ship_part_exotic'/, 'Invicta must include Exotic Systems production');
+assert.match(html, /id="shipyardPanel"[^>]+hidden/, 'Invicta shipyard must be a separately controlled POB detail panel');
+assert(html.indexOf('dtr-calculator.js') < html.indexOf('dtr-shipyard.js'), 'shipyard needs the calculator before its own runtime');
+assert(sw.includes('./dtr-shipyard.js') && sw.includes('./dtr-shipyard.css'), 'shipyard must be available offline');
+const yardSource = await read('dtr-shipyard.js');
+const yardCss = await read('dtr-shipyard.css');
+for (const hullRecipe of ['ship_assembly_dsy_venator', 'ship_assembly_dsy_legate', 'ship_assembly_co_battlecruiser_heavy', 'ship_assembly_medium_miner']) {
+  assert(yardSource.includes(hullRecipe), hullRecipe + ' must be available in the Invicta shipyard');
+}
+assert.match(yardSource, /DTRCalculator\?\.openRecipe/, 'shipyard must open DTR calculator with explicit POB and recipe');
+assert(yardCss.includes('@media(max-width:760px)'), 'shipyard must collapse component table into phone-friendly cards');
 
 const visibleSources = [html, app, calculator, production, quality, await read('dtr-uplink.js'), pwa].join('\n');
 const nonEnglishUi = [
@@ -171,8 +184,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'0\.8\.0'/, 'visible build version must match v0.8.0');
-assert.match(sw, /v0\.8\.0/, 'service-worker cache must match v0.8.0');
+assert.match(quality, /version:\s*'0\.9\.0'/, 'visible build version must match v0.9.0');
+assert.match(sw, /v0\.9\.0/, 'service-worker cache must match v0.9.0');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');
 assert(sw.includes('./dtr-production.js'), 'production runtime must be available offline');

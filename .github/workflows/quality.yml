@@ -33,3 +33,5 @@ jobs:
         run: node tests/production-runtime.mjs
       - name: Run forum composer runtime audit
         run: node tests/forum-runtime.mjs
+      - name: Run shipyard runtime audit
+        run: node tests/shipyard-runtime.mjs

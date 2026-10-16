@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '0.8.0', build: '2026.10.16-A' });
+  const META = Object.freeze({ version: '0.9.0', build: '2026.10.16-B' });
   const ATTENTION_KEY = 'dtr:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
@@ -174,7 +174,7 @@
     const storageReady = window.DTRApp?.storageCheck?.() ?? false;
     const storageFaults = state.storageFaults?.length || 0;
     const recoveries = state.recoveries?.length || 0;
-    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'overviewGrid', 'networkMatrix', 'systemPanel']
+    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'shipyardPanel', 'overviewGrid', 'networkMatrix', 'systemPanel']
       .every(id => Boolean($(id)));
     const runtimeReady = Boolean(window.DTRApp) && Boolean(window.DTRForum) && requiredShell && runtimeEvents.length === 0;
     const matches = [...(state.bases?.values?.() || [])].filter(Boolean).length;

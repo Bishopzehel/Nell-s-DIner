@@ -20,7 +20,10 @@ Mobile-first operational dashboard for the DTR faction's three active player-own
 - On phones, decorative header layers collapse so live POB content begins substantially higher on the first screen.
 - POB health and last-sync telemetry live in the detail header, leaving only credits and storage as compact summary cards.
 - Every POB has its own pinned-cargo list. Existing global watchlist entries are migrated to all three active POBs once, then remain independently editable per base.
-- All three active POBs include an advanced Scrap Smelter production module for Basic Alloy. Fort Torrelavega also produces Wildcat Gold. Every module uses that POB's live material stock to calculate production capacity and the next-cycle bottleneck, and opens the calculator with that POB and material selection. The Gold module applies the Corsair 0.85× material factor; Scrap Smelting uses its standard recipe quantities.
+- All three active POBs include the advanced Scrap Smelter for Basic Alloy. Sanctum and Invicta also run Military Salvage Reclamation (25 Prototype Components plus 450 Scrap Metal byproduct per cycle; Corsair factor 0.85×) and an advanced Hydroponics Bay (750 Food Rations per cycle, using Water and Fertilizers; standard Corsair material load). Invicta additionally fabricates Exotic Systems (Corsair factor 0.25×). Fort Torrelavega retains its advanced Wildcat Gold refining (Corsair factor 0.85×).
+- Each production module uses the respective POB's live stock for input-cycle capacity, next-cycle bottleneck, byproducts and retained catalysts. COST / CALCULATE opens the matching recipe and POB, with POB purchase (BASE BUYS) prices for material costing.
+- Invicta's dedicated shipyard supports Murmillo (recipe `ship_assembly_dsy_venator`), Legate (`ship_assembly_dsy_legate`), Consul (`ship_assembly_co_battlecruiser_heavy` / Corsair Command Battlecruiser), and Archon (`ship_assembly_medium_miner` / Modular Miner). Each hull has its own verified recipe requirements, POB hull stock, component stock, next-ship shortfall, retained crew/blueprint prerequisites and per-ship cost calculator. The registry stores the selected hull locally.
+- Shipyard material coverage is never guessed. Missing/unlisted Darkstat stock yields UNKNOWN and incomplete coverage, not zero or a fabricated production capacity. The material-cost estimate only appears when every component has a valid BASE BUYS quotation; catalysts and schematics are excluded from consumed-material costs. Assembly eligibility must also satisfy separately shown prerequisites.
 - Equal API minimum and maximum stock limits are shown once as a required stock value.
 - On wide desktop screens, the command filter aligns with the dashboard shell and overview figures use larger display type.
 - Currency values use Discovery's `$` notation throughout the dashboard and calculator.
@@ -56,4 +59,4 @@ Run the repository's dependency-free audit with:
 node tests/static-audit.mjs
 ```
 
-GitHub Actions checks JavaScript syntax and runs static, calculator, production and forum-composer runtime audits on changes to `main`.
+GitHub Actions checks JavaScript syntax and runs static, calculator, production, shipyard and forum-composer runtime audits on changes to `main`.

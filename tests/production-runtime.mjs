@@ -32,7 +32,19 @@ const inventory = [
   { nickname: 'commodity_pirate_gold', name: 'Wildcat Gold', quantity: 500, price: 500 },
   { nickname: 'commodity_basic_alloys', name: 'Basic Alloy', quantity: 44620, price: 120 },
   { nickname: 'commodity_scrap_metal', name: 'Scrap Metal', quantity: 13850, price: 20 },
-  { nickname: 'commodity_iron', name: 'Iron', quantity: 100000, price: 25 }
+  { nickname: 'commodity_iron', name: 'Iron', quantity: 100000, price: 25 },
+  { nickname: 'commodity_military_salvage', name: 'Military Salvage', quantity: 3000, price_to_sell_to_base: 50 },
+  { nickname: 'commodity_prototype_components', name: 'Prototype Components', quantity: 1000, price_to_sell_to_base: 80 },
+  { nickname: 'commodity_water', name: 'Water', quantity: 5000, price_to_sell_to_base: 2 },
+  { nickname: 'commodity_fertilizers', name: 'Fertilizers', quantity: 500, price_to_sell_to_base: 4 },
+  { nickname: 'commodity_food', name: 'Food Rations', quantity: 1750, price_to_sell_to_base: 8 },
+  { nickname: 'commodity_cryocubes', name: 'Cryocubes', quantity: 500, price_to_sell_to_base: 3 },
+  { nickname: 'commodity_high_temp_alloys', name: 'High-Temperature Alloy', quantity: 500, price_to_sell_to_base: 10 },
+  { nickname: 'commodity_super_alloys', name: 'Super Alloy', quantity: 500, price_to_sell_to_base: 15 },
+  { nickname: 'commodity_xeno_relics', name: 'Xeno Relics', quantity: 500, price_to_sell_to_base: 17 },
+  { nickname: 'commodity_azurite_gas', name: 'Azurite Gas', quantity: 500, price_to_sell_to_base: 20 },
+  { nickname: 'commodity_multiplexors', name: 'Quantum Multiplexors', quantity: 500, price_to_sell_to_base: 22 },
+  { nickname: 'commodity_ship_part_exotic', name: 'Exotic Systems', quantity: 10, price_to_sell_to_base: 170 }
 ];
 const base = { shop_items: inventory };
 const appState = {
@@ -135,5 +147,71 @@ for (const key of ['deterrence-sanctum','ravenna-invicta']) {
   assert(!elements.productionGrid.innerHTML.includes('Wildcat Gold'),key+' must not inherit Gold production');
 }
 assert(!sandbox.window.DTRProduction.POB_KEYS.includes('forja-del-vacio'), 'Forja is retired and cannot be a production node');
+
+
+const moduleIds = {
+  'deterrence-sanctum': ['recipe_scrap_advanced','recipe_milsal','recipe_fow_advanced'],
+  'ravenna-invicta': ['recipe_scrap_advanced','recipe_milsal','recipe_fow_advanced','ship_part_exotic'],
+  'fort-torrelavega': ['recipe_gold_advanced','recipe_scrap_advanced']
+};
+for (const [key, ids] of Object.entries(moduleIds)) {
+  const actual = Array.from(sandbox.window.DTRProduction.modulesFor(key), module=>module.recipeId);
+  assert.deepEqual(actual, ids, key+' must show precisely its installed production modules');
+}
+const prototypeRecipe=catalog.recipes.find(entry=>entry.id==='recipe_milsal');
+const hydroRecipe=catalog.recipes.find(entry=>entry.id==='recipe_fow_advanced');
+const exoticRecipe=catalog.recipes.find(entry=>entry.id==='ship_part_exotic');
+const production=sandbox.window.DTRProduction;
+const prototype=production.createSnapshot(prototypeRecipe,base);
+assert.equal(prototype.factor,0.85,'Corsair salvage reclamation bonus must be applied');
+assert.equal(prototype.outputPerCycle,25,'prototype reclaiming yields 25 components');
+assert.equal(prototype.rows[0].required,255,'300 Military Salvage must apply 0.85 Corsair bonus per cycle');
+assert.equal(prototype.cycles,11,'MilSal stock must determine Prototype capacity');
+assert.equal(prototype.byproducts[0].name,'Scrap Metal','reclamation must retain Scrap Metal byproduct');
+assert.equal(prototype.byproducts[0].qty,450,'reclamation must show 450 Scrap Metal byproduct');
+assert.equal(prototype.catalysts[0].qty,100,'100 scientists must be retained, not consumed');
+const hydro=production.createSnapshot(hydroRecipe,base);
+assert.equal(hydro.factor,1,'Corsairs must not receive a Hydroponics discount');
+assert.equal(hydro.outputPerCycle,750,'advanced Hydroponics yields 750 Food Rations');
+assert.deepEqual(Array.from(hydro.rows,row=>[row.option.name,row.required]),
+  [['Water',1000],['Fertilizers',100]],'advanced Hydroponics recipe must use Water and Fertilizers');
+assert.equal(hydro.cycles,5,'Hydroponics capacity must be limited by actual stock');
+assert.equal(hydro.catalysts[0].qty,200,'Hydroponics must show 200 retained crew');
+const exotic=production.createSnapshot(exoticRecipe,base);
+assert.equal(exotic.factor,0.25,'Corsair Exotic Systems factor must be 0.25');
+assert.equal(exotic.outputPerCycle,1,'Exotic Systems output one component per cycle');
+assert.deepEqual(Array.from(exotic.rows,row=>row.required),[10,15,15,10,15,25,10],
+  'Exotic Systems inputs must apply Corsair discount to each consumed material');
+assert.equal(exotic.rows[6].option.id,'commodity_multiplexors','available Multiplexors should be used for Exotic Systems');
+assert(exotic.catalysts.some(row=>row.name==='Scientists'&&row.qty===100),'Scientists required but not consumed');
+assert(exotic.catalysts.some(row=>row.name==='Crew'&&row.qty===200),'Crew required but not consumed');
+for(const key of ['deterrence-sanctum','ravenna-invicta']){
+  appState.view=key;
+  production.render();
+  assert(elements.productionGrid.innerHTML.includes('Prototype Components'),key+' must show Prototype Components production');
+  assert(elements.productionGrid.innerHTML.includes('Food Rations'),key+' must show advanced Food Rations production');
+  assert(elements.productionGrid.innerHTML.includes('Hydroponics Bay'.toUpperCase()),key+' must show Hydroponics Bay module');
+}
+appState.view='ravenna-invicta';
+production.render();
+assert(elements.productionGrid.innerHTML.includes('Exotic Systems'), 'Invicta must show shipyard Exotic Systems production');
+assert(elements.productionGrid.innerHTML.includes('CORSAIR −75% MATERIALS'),'Exotic production must show its Corsair IFF bonus');
+appState.view='deterrence-sanctum';
+production.render();
+assert(!elements.productionGrid.innerHTML.includes('Exotic Systems'),'Sanctum must not claim the Invicta Exotic Systems module');
+const callsBefore=calculatorCalls.length;
+listeners.click({target:{closest(selector){
+  return selector==='[data-production-calculate]'
+    ?{dataset:{productionCalculate:'recipe_milsal',productionPob:'deterrence-sanctum'}}:null;
+}}});
+assert.equal(calculatorCalls.length,callsBefore+1,'Salvage module should open calculator');
+assert.equal(calculatorCalls.at(-1).pobKey,'deterrence-sanctum','Sanctum module must pass its own POB');
+assert.equal(calculatorCalls.at(-1).quantity,25,'Prototype quote must select one 25-unit batch');
+listeners.click({target:{closest(selector){
+  return selector==='[data-production-calculate]'
+    ?{dataset:{productionCalculate:'ship_part_exotic',productionPob:'ravenna-invicta'}}:null;
+}}});
+assert.equal(calculatorCalls.at(-1).recipeId,'ship_part_exotic','Exotic module quote must use the exact recipe');
+assert.equal(calculatorCalls.at(-1).pobKey,'ravenna-invicta','Exotic module quote must use Invicta prices');
 
 console.log('DTR production runtime audit passed (Gold, Scrap Smelter, visible materials and calculator bridge).');

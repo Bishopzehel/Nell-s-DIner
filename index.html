@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="./dtr-responsive.css">
   <link rel="stylesheet" href="./dtr-calculator.css">
   <link rel="stylesheet" href="./dtr-production.css">
+  <link rel="stylesheet" href="./dtr-shipyard.css">
   <link rel="stylesheet" href="./dtr-calculator-mobile.css">
   <link rel="stylesheet" href="./dtr-forum.css">
 </head>
@@ -225,6 +226,16 @@
         <div id="productionGrid"></div>
       </section>
 
+      <section class="dtr-yard-panel" id="shipyardPanel" hidden>
+        <div class="section-head compact">
+          <div><p class="section-kicker">INVICTA // CAPITAL ASSEMBLY</p><h3>Shipyard Control</h3>
+            <p class="section-subline">Murmillo // Legate // Consul // Archon // live inventory &amp; build requirements</p></div>
+          <span class="dtr-yard-state" id="shipyardState">CHECKING</span>
+        </div>
+        <div class="dtr-yard-hulls" id="shipyardHulls" role="group" aria-label="Select an Invicta shipyard hull"></div>
+        <div class="dtr-yard-detail" id="shipyardDetails" aria-live="polite"></div>
+      </section>
+
       <section class="watch-panel">
         <div class="section-head compact">
           <div><p class="section-kicker">POB PRIORITY STOCK</p><h3>Pinned Cargo</h3><p class="section-subline">Each POB keeps its own pins // star commodities in this base's manifest</p></div>
@@ -282,6 +293,7 @@
   <script src="./dtr-procurement-prices.js"></script>
   <script src="./dtr-calculator.js"></script>
   <script src="./dtr-production.js"></script>
+  <script src="./dtr-shipyard.js"></script>
   <script src="./dtr-forum.js"></script>
   <script src="./dtr-quality.js"></script>
   <script src="./dtr-uplink.js"></script>

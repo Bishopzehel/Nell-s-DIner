@@ -27,9 +27,30 @@
     })
   });
 
+  const PROTOTYPE_MODULE = Object.freeze({
+    recipeId: 'recipe_milsal',
+    code: 'MODULE-06',
+    process: 'MILITARY SALVAGE RECLAMATION',
+    preferredAlternatives: Object.freeze({})
+  });
+
+  const HYDROPONICS_MODULE = Object.freeze({
+    recipeId: 'recipe_fow_advanced',
+    code: 'MODULE-07',
+    process: 'HYDROPONICS BAY // ADVANCED',
+    preferredAlternatives: Object.freeze({})
+  });
+
+  const EXOTIC_MODULE = Object.freeze({
+    recipeId: 'ship_part_exotic',
+    code: 'MODULE-08',
+    process: 'SHIPYARD COMPONENT FABRICATION',
+    preferredAlternatives: Object.freeze({})
+  });
+
   const MODULES_BY_POB = Object.freeze({
-    'deterrence-sanctum': Object.freeze([SCRAP_MODULE]),
-    'ravenna-invicta': Object.freeze([SCRAP_MODULE]),
+    'deterrence-sanctum': Object.freeze([SCRAP_MODULE, PROTOTYPE_MODULE, HYDROPONICS_MODULE]),
+    'ravenna-invicta': Object.freeze([SCRAP_MODULE, PROTOTYPE_MODULE, HYDROPONICS_MODULE, EXOTIC_MODULE]),
     [TORRELAVEGA_KEY]: Object.freeze([GOLD_MODULE, SCRAP_MODULE])
   });
 
@@ -295,7 +316,9 @@
     if (subline) {
       subline.textContent = pobKey === TORRELAVEGA_KEY
         ? 'Wildcat Gold // Basic Alloy // live material capacity'
-        : 'Scrap Smelter // Basic Alloy // live material capacity';
+        : pobKey === 'ravenna-invicta'
+          ? 'Basic Alloy // Prototype Components // Food Rations // Exotic Systems'
+          : 'Basic Alloy // Prototype Components // Food Rations';
     }
     if (grid?.dataset) grid.dataset.modules = String(moduleCount);
     if (grid?.style) grid.style.gridTemplateColumns = moduleCount === 1 ? '1fr' : '';
