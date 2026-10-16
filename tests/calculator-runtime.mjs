@@ -20,11 +20,11 @@ const pobs = [
   { key: 'fort-torrelavega', short: 'TORRELAVEGA', label: 'Fort Torrelavega' }
 ];
 
-function calculatorRuntime(recipeId, shopItems, quantity = 1, priceOverrides = {}, search = '') {
+function calculatorRuntime(recipeId, shopItems, quantity = 1, priceOverrides = {}, search = '', selectedPob = 'deterrence-sanctum') {
   const storage = new Map([["dtr:calculator:v1", JSON.stringify({
     recipeId,
     search,
-    pobKey: 'deterrence-sanctum',
+    pobKey: selectedPob,
     quantity,
     alternatives: {},
     priceOverrides
@@ -60,7 +60,7 @@ function calculatorRuntime(recipeId, shopItems, quantity = 1, priceOverrides = {
         POBS: pobs,
         getState() {
           return {
-            bases: new Map([['deterrence-sanctum', { shop_items: shopItems }]]),
+            bases: new Map([[selectedPob, { shop_items: shopItems }]]),
             mode: 'live',
             last: new Date('2026-09-02T12:00:00Z'),
             view: 'calculator'
@@ -81,8 +81,8 @@ function calculatorRuntime(recipeId, shopItems, quantity = 1, priceOverrides = {
   };
 }
 
-function calculatorHtml(recipeId, shopItems, quantity = 1, priceOverrides = {}, search = '') {
-  return calculatorRuntime(recipeId, shopItems, quantity, priceOverrides, search).html;
+function calculatorHtml(recipeId, shopItems, quantity = 1, priceOverrides = {}, search = '', selectedPob = 'deterrence-sanctum') {
+  return calculatorRuntime(recipeId, shopItems, quantity, priceOverrides, search, selectedPob).html;
 }
 
 function inventoryFor(recipe, price) {
@@ -285,5 +285,42 @@ assert(wildcatHtml.includes('Gold refining, advanced → Wildcat Gold × 800'), 
 assert(wildcatHtml.includes('Gold refining, bulk → Wildcat Gold × 4,000'), 'bulk Wildcat Gold output must be labelled');
 assert(wildcatHtml.includes('Wildcat Gold reprocessing → Gold × 100'), 'the separate Wildcat-to-Gold conversion must remain distinct');
 assert(!wildcatHtml.includes('RECIPE FEE'), 'zero-value recipe fees must stay out of the quote summary');
+
+
+// Invicta shipyard alone values Exotic Systems at its outgoing BASE SELLS quote.
+// The POB may only pay $1 to buy Exotics while selling them for $50,000.
+const invictaShipRecipe=catalog.recipes.find(recipe=>recipe.id==='ship_assembly_dsy_venator');
+assert(invictaShipRecipe,'Murmillo recipe must exist');
+const invictaStock=invictaShipRecipe.inputs.map(group=>{
+  const o=group.options[0];
+  return {
+    nickname:o.id,name:o.name,quantity:1000,
+    price:o.id==='commodity_ship_part_exotic'?1:10,
+    price_to_sell_to_base:o.id==='commodity_ship_part_exotic'?1:10,
+    price_to_buy_from_base:o.id==='commodity_ship_part_exotic'?50000:999,
+    dtrBaseSellPrice:o.id==='commodity_ship_part_exotic'?50000:999
+  };
+});
+const invictaHtml=calculatorHtml(invictaShipRecipe.id,invictaStock,1,{},'','ravenna-invicta');
+assert(invictaHtml.includes('INVICTA BASE SELLS // EXOTIC SYSTEMS'),'Invicta shipyard Exotic price source must be shown');
+assert(invictaHtml.includes('value="50000"'),'Invicta shipyard Exotic price must use the $50,000 selling quote');
+assert(invictaHtml.includes('$2,652,300'),'Murmillo calculator must match shipyard mixed-source material valuation');
+const invictaOverride=calculatorHtml(invictaShipRecipe.id,invictaStock,1,{
+  'ravenna-invicta':{'commodity_ship_part_exotic':45000}
+},'','ravenna-invicta');
+assert(invictaOverride.includes('value="45000"'),'manual pricing must remain possible');
+assert(invictaOverride.includes('MANUAL PRICE // SAVED FOR THIS POB'),'manual source must be shown');
+assert(invictaOverride.includes('$2,387,300'),'manual override must adjust the selected shipyard quote');
+const invictaUnknown=calculatorHtml(invictaShipRecipe.id,invictaStock.map(item=>
+  item.nickname==='commodity_ship_part_exotic'
+    ?{...item,price_to_buy_from_base:null,dtrBaseSellPrice:null}
+    :item
+),1,{},'','ravenna-invicta');
+assert(invictaUnknown.includes('MATERIAL PRICES MISSING'),'a missing exotic sale price must block complete ship pricing');
+assert(!invictaUnknown.includes('$2,353'),'a $1 incoming buy offer must never be mistaken for the outgoing price');
+assert(invictaUnknown.includes('NO POB PRICE // ENTER MANUALLY'),'unreported exotic price should allow manual entry');
+const sanctuaryShip=calculatorHtml(invictaShipRecipe.id,invictaStock,1,{},'','deterrence-sanctum');
+assert(sanctuaryShip.includes('value="1"'),'normal non-Invicta calculator quotes must retain BASE BUYS for Exotics');
+assert(!sanctuaryShip.includes('EXOTIC = BASE SELLS'),'Exotic sale-price exception must remain scoped to Invicta shipyard');
 
 console.log('DTR calculator runtime audit passed (live, manual, missing, variants, alternative-price and Corsair-IFF scenarios).');

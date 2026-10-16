@@ -6,6 +6,7 @@
   const POB_KEY='ravenna-invicta';
   const STORAGE_KEY='dtr:shipyard:invicta:hull:v1';
   const CORSAIR_IFF='fc_c_grp';
+  const EXOTIC_COMPONENT='commodity_ship_part_exotic';
   const HULLS=Object.freeze([
     Object.freeze({
       key:'murmillo',label:'Murmillo',subtitle:'Corsair Battleship',
@@ -70,6 +71,24 @@
       :finite(item.price_to_sell_to_base??item.sell_price??item.price_sell);
     return price!==null&&price>0?price:null;
   }
+  function sellPrice(item){
+    if(!item)return null;
+    const quoted=window.DTRProcurementPrices?.pobSalePrice?.(item);
+    const fromItem=Object.prototype.hasOwnProperty.call(item,'dtrBaseSellPrice')
+      ?finite(item.dtrBaseSellPrice)
+      :finite(item.price_to_buy_from_base??item.buy_price??item.price_buy??item.price);
+    const result=quoted??fromItem;
+    return result!==null&&result>0?result:null;
+  }
+  function inputValue(item,option){
+    // The only deliberate exception to BASE BUYS: Invicta produces Exotic
+    // Systems and values them at its actual BASE SELLS quote (opportunity value).
+    const exotic=option?.id===EXOTIC_COMPONENT;
+    return {
+      price:exotic?sellPrice(item):buyPrice(item),
+      priceSource:exotic?'BASE SELLS':'BASE BUYS'
+    };
+  }
   function factor(recipe){
     return recipe?.bonuses?.find(b=>b.id===CORSAIR_IFF)?.factor??1;
   }
@@ -99,9 +118,9 @@
       const required=perShip(option.qty,iff);
       const item=findItem(base,option);
       const available=stock(item);
-      const unitPrice=buyPrice(item);
+      const {price:unitPrice,priceSource}=inputValue(item,option);
       return {
-        id:option.id,name:option.name,required,stock:available,unitPrice,
+        id:option.id,name:option.name,required,stock:available,unitPrice,priceSource,
         capacity:required>0&&available!==null?Math.max(0,Math.floor(available/required)):null,
         listed:Boolean(item)
       };
@@ -149,6 +168,8 @@
         '</strong><small>'+esc(row.id)+'</small></th>'+
         '<td data-label="PER SHIP">'+fmt(row.required)+'</td>'+
         '<td data-label="POB STOCK">'+stockText+'</td>'+
+        '<td data-label="UNIT VALUE" class="dtr-yard-unit-price">'+dollars(row.unitPrice)+
+          '<small>'+row.priceSource+'</small></td>'+
         '<td data-label="NEXT SHIP">'+gapText+'</td></tr>';
     }).join('');
   }
@@ -180,10 +201,10 @@
         '<div><small>BOTTLENECK / NEXT SHIP</small><strong>'+bottleneck+'</strong><span>'+
           (a.nextHull===null?'AWAITING COMPLETE STOCK FEED':'BUILD #'+fmt(a.nextHull))+'</span></div>'+
         '<div><small>EST. MATERIAL COST</small><strong>'+dollars(a.materialCost)+'</strong><span>'+
-          (a.priceComplete?'BASE BUYS // INPUTS ONLY':'ONE OR MORE BUY PRICES MISSING')+'</span></div>'+
+          (a.priceComplete?'BASE BUYS // EXOTIC: BASE SELLS':'BUY / SELL QUOTATION MISSING')+'</span></div>'+
       '</div>'+
       '<div class="dtr-yard-components"><div class="dtr-yard-subhead"><strong>SHIP COMPONENTS</strong><span>LIVE INVICTA STOCK // NEXT BUILD</span></div>'+
-      '<div class="dtr-yard-table-wrap"><table class="dtr-yard-table"><thead><tr><th>COMPONENT</th><th>PER SHIP</th><th>POB STOCK</th><th>NEXT SHIP</th></tr></thead><tbody>'+
+      '<div class="dtr-yard-table-wrap"><table class="dtr-yard-table"><thead><tr><th>COMPONENT</th><th>PER SHIP</th><th>POB STOCK</th><th>UNIT VALUE</th><th>NEXT SHIP</th></tr></thead><tbody>'+
         materialMarkup(a)+'</tbody></table></div></div>'+
       '<div class="dtr-yard-prerequisites"><div class="dtr-yard-subhead"><strong>BUILD PREREQUISITES</strong><span>RETAINED // NOT CONSUMED</span></div>'+
         '<ul>'+prerequisitesMarkup(a)+'</ul><p>Reported separately from material coverage. Crew and design schematics must be verified before assembly.</p></div>';

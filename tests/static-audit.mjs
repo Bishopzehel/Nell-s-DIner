@@ -149,6 +149,14 @@ for (const hullRecipe of ['ship_assembly_dsy_venator', 'ship_assembly_dsy_legate
   assert(yardSource.includes(hullRecipe), hullRecipe + ' must be available in the Invicta shipyard');
 }
 assert.match(yardSource, /DTRCalculator\?\.openRecipe/, 'shipyard must open DTR calculator with explicit POB and recipe');
+assert.match(yardSource, /EXOTIC_COMPONENT='commodity_ship_part_exotic'/, 'shipyard must identify the Exotic Systems valuation exception');
+assert.match(yardSource, /BASE BUYS \/\/ EXOTIC: BASE SELLS/, 'shipyard must disclose the differing Exotic Systems price source');
+assert.match(yardSource, /UNIT VALUE/, 'shipyard should display its individual component valuations');
+assert.match(calculator, /INVICTA_SHIPYARD_RECIPES/, 'calculator must implement the same Invicta-only ship pricing exception');
+assert.match(calculator, /INVICTA BASE SELLS \/\/ EXOTIC SYSTEMS/, 'calculator must label its Exotic Systems price direction');
+const procurement = await read('dtr-procurement-prices.js');
+assert.match(procurement, /dtrBaseSellPrice/, 'purchase-price adapter must preserve original sales quotes');
+assert.match(procurement, /pobSalePrice/, 'sale quote must have its own getter rather than rereading normalized item.price');
 assert(yardCss.includes('@media(max-width:760px)'), 'shipyard must collapse component table into phone-friendly cards');
 
 const visibleSources = [html, app, calculator, production, quality, await read('dtr-uplink.js'), pwa].join('\n');
@@ -184,8 +192,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'0\.9\.0'/, 'visible build version must match v0.9.0');
-assert.match(sw, /v0\.9\.0/, 'service-worker cache must match v0.9.0');
+assert.match(quality, /version:\s*'0\.9\.1'/, 'visible build version must match v0.9.1');
+assert.match(sw, /v0\.9\.1/, 'service-worker cache must match v0.9.1');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');
 assert(sw.includes('./dtr-production.js'), 'production runtime must be available offline');

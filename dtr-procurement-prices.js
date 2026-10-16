@@ -22,13 +22,33 @@
     return value !== null && value > 0 ? value : null;
   }
 
+  function validPrice(value) {
+    const price = finite(value);
+    return price !== null && price > 0 ? price : null;
+  }
+
+  function pobSalePrice(item) {
+    if (!item) return null;
+    // Tool-facing clones already have their original Darkstat sale quote captured.
+    // Do not read their item.price as a fallback: it has become BASE BUYS.
+    if (Object.prototype.hasOwnProperty.call(item, 'dtrBaseSellPrice')) {
+      return validPrice(item.dtrBaseSellPrice);
+    }
+    return validPrice(item.price_to_buy_from_base)
+      ?? validPrice(item.buy_price)
+      ?? validPrice(item.price_buy)
+      ?? validPrice(item.price);
+  }
+
   function adaptItem(item) {
     if (!item || typeof item !== 'object') return item;
     const purchasePrice = pobPurchasePrice(item);
-    /* dtr-calculator.js / dtr-production.js historically read item.price first.
-       Set it explicitly on the tool-facing clone. Zero intentionally blocks
-       fallback to BASE SELLS when the POB has no valid purchase price. */
-    return { ...item, price: purchasePrice ?? 0 };
+    const salePrice = pobSalePrice(item);
+    /* Preserve both original price directions on tool-facing clones:
+       item.price is BASE BUYS for existing cost tools, while the distinct
+       dtrBaseSellPrice holds BASE SELLS for Invicta Exotic Systems valuation.
+       A null sale quote must never fall through to item.price (which may be $1). */
+    return { ...item, dtrBaseSellPrice: salePrice, price: purchasePrice ?? 0 };
   }
 
   function adaptBase(base) {
@@ -58,7 +78,7 @@
   }
 
   window.DTRApp = Object.freeze({ ...originalApp, getState });
-  window.DTRProcurementPrices = Object.freeze({ pobPurchasePrice, adaptBase });
+  window.DTRProcurementPrices = Object.freeze({ pobPurchasePrice, pobSalePrice, adaptBase });
   document.documentElement.dataset.dtrProcurementPrice = 'base-buys';
 
   function fixCalculatorLabels() {

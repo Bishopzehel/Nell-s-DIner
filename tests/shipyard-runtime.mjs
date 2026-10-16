@@ -22,7 +22,8 @@ const prices={
 };
 const components=Object.entries(prices).map(([nickname,buy])=>({
  nickname,name:nickname,quantity:1000,
- price_to_sell_to_base:buy,price_to_buy_from_base:999
+ price_to_sell_to_base:nickname==='commodity_ship_part_exotic'?1:buy,
+ price_to_buy_from_base:nickname==='commodity_ship_part_exotic'?50000:999
 }));
 const base={shop_items:[
  ...components,
@@ -55,6 +56,13 @@ const context={
     pobPurchasePrice(item){
       const n=Number(item?.price_to_sell_to_base);
       return Number.isFinite(n)&&n>0?n:null;
+    },
+    pobSalePrice(item){
+      const raw=Object.prototype.hasOwnProperty.call(item??{},'dtrBaseSellPrice')
+        ?item.dtrBaseSellPrice
+        :item?.price_to_buy_from_base??item?.buy_price??item?.price_buy??item?.price;
+      const n=raw===null||raw===undefined?null:Number(raw);
+      return Number.isFinite(n)&&n>0?n:null;
     }
   },
   addEventListener(type,handler){listeners['window:'+type]=handler;}
@@ -82,7 +90,15 @@ assert.deepEqual(Array.from(m.materials,r=>r.required),[42,42,43,60,43,53],'Murm
 assert.equal(m.buildable,16,'1000 of every component supports 16 Murmillos');
 assert.equal(m.bottleneck.name,'Superstructure Systems');
 assert.equal(m.bottleneck.gap,20,'next 17th Murmillo requires 20 more Superstructure Systems');
-assert.equal(m.materialCost,2830,'material cost must use BASE BUYS not BASE SELLS');
+assert.equal(m.materialCost,2652300,'Exotic Systems must use its $50,000 BASE SELLS quote, not the $1 buy offer');
+const exoticRow=m.materials.find(row=>row.id==='commodity_ship_part_exotic');
+assert.equal(exoticRow.unitPrice,50000,'Exotic Systems valuation must use Invicta selling price');
+assert.equal(exoticRow.priceSource,'BASE SELLS','Exotic Systems must clearly identify sale-price valuation');
+assert.equal(m.materials.find(row=>row.id==='commodity_ship_part_reactor').unitPrice,10,'other inputs must keep BASE BUYS pricing');
+assert.equal(m.materials.find(row=>row.id==='commodity_ship_part_reactor').priceSource,'BASE BUYS');
+assert(elements.shipyardDetails.innerHTML.includes('BASE BUYS // EXOTIC: BASE SELLS'),'material estimate must label the hybrid quote');
+assert(elements.shipyardDetails.innerHTML.includes('UNIT VALUE'),'shipyard must display actual per-component values');
+assert(elements.shipyardDetails.innerHTML.includes('$50,000'),'component table must show the Exotic quote');
 assert.equal(m.priceComplete,true);
 const l=yard.analyze(legate,base);
 assert.equal(l.finishedStock,3,'Legate stock must not be confused with Murmillo');
@@ -91,7 +107,7 @@ const c=yard.analyze(consul,base);
 assert.equal(c.recipe.name,'Corsair Command Battlecruiser','Consul must resolve the catalog Corsair Command Battlecruiser');
 assert.deepEqual(Array.from(c.materials,r=>r.required),[343,439,426,255,346,317],
   'Consul must use its own heavy battlecruiser requirements');
-assert.equal(c.materialCost,21260);
+assert.equal(c.materialCost,15868090,'Consul must count 317 Exotic Systems at $50,000 each');
 assert.equal(c.buildable,2);
 assert.equal(c.finishedStock,1);
 const a=yard.analyze(archon,base);
@@ -103,6 +119,19 @@ assert(a.prerequisites.some(row=>row.id==='commodity_crew'&&row.required===400),
 assert(a.prerequisites.some(row=>row.id==='blueprint_medium_miner'&&row.required===1),
   'Archon requires a separately reported design schematic');
 assert.equal(a.materialCost,(180+138+223+197+205)*10,'retained schematics and crew must not enter material costs');
+
+// A $1 BASE BUYS placeholder must not act as a fallback when Invicta
+// provides no outgoing Exotic Systems price.
+const noExoticSale={shop_items:base.shop_items.map(row=>row.nickname==='commodity_ship_part_exotic'
+  ?{...row,price_to_sell_to_base:1,price_to_buy_from_base:null,price:null}:row)};
+const unpricedExotics=yard.analyze(murmillo,noExoticSale);
+assert.equal(unpricedExotics.materials.find(row=>row.id==='commodity_ship_part_exotic').unitPrice,null);
+assert.equal(unpricedExotics.priceComplete,false);
+assert.equal(unpricedExotics.materialCost,null,'missing sale price must not silently become $1');
+const preservedAdapterQuote={shop_items:base.shop_items.map(row=>row.nickname==='commodity_ship_part_exotic'
+  ?{...row,dtrBaseSellPrice:50000,price:1,price_to_buy_from_base:null}:row)};
+assert.equal(yard.analyze(murmillo,preservedAdapterQuote).materialCost,2652300,
+  'adapter must retain original sale quote despite rewriting generic item.price to $1');
 
 // Unreported stocks are unknown, never silently treated as zero.
 const incompleteBase={shop_items:base.shop_items.filter(row=>row.nickname!=='commodity_ship_part_exotic')};

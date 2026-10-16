@@ -6,6 +6,13 @@
   const STORAGE_KEY = 'dtr:calculator:v1';
   const DEFAULT_POB = 'deterrence-sanctum';
   const DTR_AFFILIATION = 'fc_c_grp';
+  const EXOTIC_COMPONENT_ID = 'commodity_ship_part_exotic';
+  const INVICTA_SHIPYARD_RECIPES = new Set([
+    'ship_assembly_dsy_venator',
+    'ship_assembly_dsy_legate',
+    'ship_assembly_co_battlecruiser_heavy',
+    'ship_assembly_medium_miner'
+  ]);
   const LOCALE = 'en-GB';
   const numberFormat = new Intl.NumberFormat(LOCALE);
   let root = null;
@@ -145,6 +152,25 @@
     return value !== null && value > 0 ? value : null;
   }
 
+  function pobBaseSellPrice(item) {
+    if (!item) return null;
+    const connected = window.DTRProcurementPrices?.pobSalePrice;
+    // The adapter keeps the unmodified sale quote separately from item.price.
+    const raw = typeof connected === 'function'
+      ? connected(item)
+      : Object.prototype.hasOwnProperty.call(item, 'dtrBaseSellPrice')
+        ? item.dtrBaseSellPrice
+        : item.price_to_buy_from_base ?? item.buy_price ?? item.price_buy ?? item.price;
+    const value = finite(raw);
+    return value !== null && value > 0 ? value : null;
+  }
+
+  function useExoticSaleQuote(option) {
+    return state.pobKey === 'ravenna-invicta'
+      && INVICTA_SHIPYARD_RECIPES.has(state.recipeId)
+      && option?.id === EXOTIC_COMPONENT_ID;
+  }
+
   function priceKey(option) {
     return String(option?.id || norm(option?.name) || 'unknown-item');
   }
@@ -240,7 +266,8 @@
 
   function optionSnapshot(base, option) {
     const item = findInventoryItem(base, option);
-    const livePrice = pobSalePrice(item);
+    const isExoticValuation = useExoticSaleQuote(option);
+    const livePrice = isExoticValuation ? pobBaseSellPrice(item) : pobSalePrice(item);
     const override = manualPrice(option);
     return {
       option,
@@ -248,7 +275,8 @@
       livePrice,
       manualPrice: override,
       price: override ?? livePrice,
-      priceSource: override !== null ? 'manual' : livePrice !== null ? 'pob' : 'missing',
+      priceSource: override !== null ? 'manual'
+        : livePrice !== null ? (isExoticValuation ? 'base-sells' : 'pob') : 'missing',
       stock: inventoryQuantity(item)
     };
   }
@@ -411,7 +439,7 @@
     const optionSummary = option => {
       const snapshot = optionSnapshot(row.base, option);
       const price = snapshot.price !== null
-        ? `${snapshot.priceSource === 'manual' ? 'MANUAL' : 'POB'} ${money(snapshot.price)}`
+        ? `${snapshot.priceSource === 'manual' ? 'MANUAL' : snapshot.priceSource === 'base-sells' ? 'BASE SELLS' : 'POB'} ${money(snapshot.price)}`
         : snapshot.item
           ? 'NO PRICE'
           : 'NOT LISTED';
@@ -438,7 +466,9 @@
     const sourceLabel = row.priceSource === 'manual'
       ? 'MANUAL PRICE // SAVED FOR THIS POB'
       : row.livePrice !== null
-        ? 'LIVE POB PRICE // EDIT TO OVERRIDE'
+        ? row.priceSource === 'base-sells'
+          ? 'INVICTA BASE SELLS // EXOTIC SYSTEMS'
+          : 'LIVE POB PRICE // EDIT TO OVERRIDE'
         : 'NO POB PRICE // ENTER MANUALLY';
     const resetLabel = row.livePrice !== null ? 'USE POB PRICE' : 'CLEAR MANUAL PRICE';
     const resetAria = row.livePrice !== null
@@ -539,9 +569,10 @@
         : 'ALL CONSUMED MATERIALS PRICED'
       : `${money(result.knownCost)} KNOWN SUBTOTAL`;
     const overrideCount = manualPriceCount(pob.key);
+    const invictaExoticValuation = pob.key === 'ravenna-invicta' && INVICTA_SHIPYARD_RECIPES.has(recipe.id);
     const materialPriceNote = storageError
       ? 'MANUAL PRICES NOT SAVED // STORAGE UNAVAILABLE'
-      : `${overrideCount ? `${overrideCount} SAVED MANUAL // ` : ''}EDIT UNIT PRICES BELOW`;
+      : `${invictaExoticValuation ? 'EXOTIC = BASE SELLS // ' : ''}${overrideCount ? `${overrideCount} SAVED MANUAL // ` : ''}EDIT UNIT PRICES BELOW`;
 
     root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG.meta.recipeCount)}"><div><p class="section-kicker">DTR PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
       <section class="calculator-controls">
@@ -570,7 +601,7 @@
         <div class="calculator-legend"><span><i data-tone="good"></i>AVAILABLE</span><span><i data-tone="warn"></i>PRICE / STOCK NOTICE</span><span><i data-tone="danger"></i>MISSING / OUT OF STOCK</span></div>
       </section>
       ${catalystMarkup(result.catalysts)}
-      <div class="calculator-source"><span>RECIPE SOURCE // <a href="${esc(CATALOG.meta.sourceUrl)}" target="_blank" rel="noopener noreferrer">DISCOVERY PUBLIC GAME CONFIG</a></span><span>PRICES // DARKSTAT + LOCAL POB OVERRIDES</span></div>`;
+      <div class="calculator-source"><span>RECIPE SOURCE // <a href="${esc(CATALOG.meta.sourceUrl)}" target="_blank" rel="noopener noreferrer">DISCOVERY PUBLIC GAME CONFIG</a></span><span>PRICES // DARKSTAT + LOCAL POB OVERRIDES${invictaExoticValuation ? ' // EXOTIC SYSTEMS AT INVICTA BASE SELLS' : ''}</span></div>`;
 
     if (focusSearch) focusRecipeSearch();
   }
