@@ -119,7 +119,6 @@
     const location = fieldValue(s, 'location') || 'LOCATION';
     const recipient = fieldValue(s, 'recipient') || 'RECIPIENT';
     const encryption = fieldValue(s, 'encryption') || 'ENCRYPTION';
-    const subject = fieldValue(s, 'subject');
     const opening = fieldValue(s, 'opening');
     const closing = fieldValue(s, 'closing');
     const role = fieldValue(s, 'role');
@@ -138,7 +137,7 @@
       ['Sender ID', sender],
       ['Location', location],
       ['Recipient - Encryption', recipient + ' - ' + encryption]
-    ].concat(subject ? [['Subject', subject]] : []).forEach(entry => {
+    ].forEach(entry => {
       result.push('[color=' + label + '][size=19]' + entry[0] + '[/size][/color]');
       result.push('[indent][size=13][color=' + gold + ']' + entry[1] + '[/color][/size][/indent]');
     });
@@ -206,7 +205,6 @@
       ['Location', s.location || 'LOCATION'],
       ['Recipient - Encryption', (s.recipient || 'RECIPIENT') + ' - ' + (s.encryption || 'ENCRYPTION')]
     ];
-    if (s.subject.trim()) rows.push(['Subject',s.subject]);
     return '<article class="dtr-forum-render">' +
       '<div class="dtr-forum-preview-art">' +
         picture(s.topImage,'dtr-forum-preview-logo','Corsair transmission banner') +

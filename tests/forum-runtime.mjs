@@ -43,6 +43,8 @@ const state={
   message:'This is **important**.\n\n[spoiler=Screenshots]\n[url=https://example.com/image][img]https://example.com/test.png[/img][/url]\n[/spoiler]'
 };
 const code=api.buildBbcode(state);
+assert(!code.includes('[size=19]Subject[/size]'), 'BBCode header must not contain a Subject row');
+assert(!code.includes('Test report'), 'internal subject must not appear in exported forum post');
 assert(code.includes('[img float=right]'+CREST+'[/img]'),'fixed DTR serpent must always appear on the right');
 assert(code.indexOf('[img float=right]'+CREST+'[/img]')===code.lastIndexOf('[img float=right]'+CREST+'[/img]'),'right serpent must be included exactly once');
 const customPortrait=api.buildBbcode({...state,leftImage:'https://example.com/portrait.gif'});
@@ -69,6 +71,8 @@ const preview=api.previewMarkup({
   ...state,message:'<script>alert(1)</script>\n\n[spoiler=Evidence][img]https://example.com/evidence.png[/img][/spoiler]'
 });
 assert(!preview.includes('<script>'),'preview must escape untrusted HTML');
+assert(!preview.includes('Test report'), 'preview header must not contain internal draft subject');
+assert(!preview.includes('>Subject<'), 'preview must not render a Subject row');
 assert(preview.includes('&lt;script&gt;'),'escaped message should still be legible');
 assert(preview.includes('<details class="dtr-forum-spoiler">'),'spoilers should appear in preview');
 assert(preview.includes('https://example.com/evidence.png'),'HTTPS image should appear');
@@ -77,6 +81,7 @@ assert(preview.includes('class="dtr-forum-preview-crest" src="'+CREST+'"'),'righ
 const oldPreview=api.previewMarkup({...state,rightImage:'https://example.com/overwrite.png',leftImage:'https://example.com/portrait.gif'});
 assert(oldPreview.includes('class="dtr-forum-preview-portrait" src="https://example.com/portrait.gif"'),'personal sender image must appear in the left portrait slot');
 assert(!oldPreview.includes('https://example.com/overwrite.png'),'legacy right image cannot replace the preview crest');
+assert(!oldPreview.includes('Test report'), 'legacy preview must not render draft subject either');
 assert(oldPreview.indexOf('class="dtr-forum-preview-portrait"') < oldPreview.indexOf('class="dtr-forum-preview-meta"'),'portrait must appear before sender metadata');
 assert(oldPreview.indexOf('class="dtr-forum-preview-meta"') < oldPreview.indexOf('class="dtr-forum-preview-crest-slot"'),'serpent crest must appear after sender metadata');
 const bare=api.buildBbcode({...defaults,topImage:'',leftImage:'',rightImage:'',footerImage:''});
