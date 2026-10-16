@@ -7,7 +7,6 @@
   const POB_KEYS = Object.freeze([
     'deterrence-sanctum',
     'ravenna-invicta',
-    'forja-del-vacio',
     TORRELAVEGA_KEY
   ]);
 
@@ -31,7 +30,6 @@
   const MODULES_BY_POB = Object.freeze({
     'deterrence-sanctum': Object.freeze([SCRAP_MODULE]),
     'ravenna-invicta': Object.freeze([SCRAP_MODULE]),
-    'forja-del-vacio': Object.freeze([SCRAP_MODULE]),
     [TORRELAVEGA_KEY]: Object.freeze([GOLD_MODULE, SCRAP_MODULE])
   });
 

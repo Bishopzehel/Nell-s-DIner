@@ -17,7 +17,6 @@ const catalog = catalogContext.window.DTR_RECIPE_CATALOG;
 const pobs = [
   { key: 'deterrence-sanctum', short: 'SANCTUM', label: 'Deterrence Sanctum' },
   { key: 'ravenna-invicta', short: 'INVICTA', label: 'Ravenna Invicta' },
-  { key: 'forja-del-vacio', short: 'FORJA', label: 'Forja del Vacio' },
   { key: 'fort-torrelavega', short: 'TORRELAVEGA', label: 'Fort Torrelavega' }
 ];
 

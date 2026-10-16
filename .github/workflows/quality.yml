@@ -31,3 +31,5 @@ jobs:
         run: node tests/calculator-runtime.mjs
       - name: Run production runtime audit
         run: node tests/production-runtime.mjs
+      - name: Run forum composer runtime audit
+        run: node tests/forum-runtime.mjs

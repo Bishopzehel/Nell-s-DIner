@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '0.7.5', build: '2026.09.05-B' });
+  const META = Object.freeze({ version: '0.8.0', build: '2026.10.16-A' });
   const ATTENTION_KEY = 'dtr:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
@@ -74,7 +74,8 @@
         index: `0${index + 1}`,
         short: pob.key === 'fort-torrelavega' ? 'TORRE' : pob.short,
         label: pob.label
-      }))
+      })),
+      { view: 'forum', index: String(configured.length + 2).padStart(2, '0'), short: 'FORUM', label: 'Forum transmission composer' }
     ];
   }
 
@@ -173,9 +174,9 @@
     const storageReady = window.DTRApp?.storageCheck?.() ?? false;
     const storageFaults = state.storageFaults?.length || 0;
     const recoveries = state.recoveries?.length || 0;
-    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'detailView', 'overviewGrid', 'networkMatrix', 'systemPanel']
+    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'overviewGrid', 'networkMatrix', 'systemPanel']
       .every(id => Boolean($(id)));
-    const runtimeReady = Boolean(window.DTRApp) && requiredShell && runtimeEvents.length === 0;
+    const runtimeReady = Boolean(window.DTRApp) && Boolean(window.DTRForum) && requiredShell && runtimeEvents.length === 0;
     const matches = [...(state.bases?.values?.() || [])].filter(Boolean).length;
     const pwaState = window.DTRPWA?.state || {};
     const registration = pwaState.registration;
@@ -241,9 +242,9 @@
       diagnostic(
         'pobs',
         'POB MATCHES',
-        matches === 4 ? 'good' : matches ? 'warn' : 'danger',
-        `${matches}/4`,
-        matches === 4 ? 'All tracked DTR POBs resolve from the current app state.' : 'One or more tracked POBs are missing from the current app state.'
+        matches === (window.DTRApp?.POBS?.length || 0) ? 'good' : matches ? 'warn' : 'danger',
+        `${matches}/${window.DTRApp?.POBS?.length || 0}`,
+        matches === (window.DTRApp?.POBS?.length || 0) ? 'All tracked DTR POBs resolve from the current app state.' : 'One or more tracked POBs are missing from the current app state.'
       ),
       diagnostic(
         'recipes',

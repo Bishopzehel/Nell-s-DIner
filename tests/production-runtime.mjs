@@ -125,4 +125,15 @@ assert.equal(calculatorCalls[0].quantity, 750, 'calculator bridge must quote one
 assert.equal(calculatorCalls[0].alternatives[1], 'commodity_mox_fuel', 'calculator bridge must preserve the configured Scrap Smelter fuel');
 assert.equal(calculatorCalls[0].alternatives[2], 'commodity_scrap_metal', 'calculator bridge must preserve Scrap Metal instead of silently switching to Iron');
 
+assert.equal(sandbox.window.DTRProduction.POB_KEYS.length, 3, 'the active network must have three POBs');
+for (const key of ['deterrence-sanctum','ravenna-invicta']) {
+  appState.view=key;
+  appState.bases.set(key,base);
+  sandbox.window.DTRProduction.render();
+  assert(!elements.productionPanel.hidden,key+' must render production panel');
+  assert(elements.productionGrid.innerHTML.includes('SCRAP SMELTER'),key+' must render Scrap Smelter');
+  assert(!elements.productionGrid.innerHTML.includes('Wildcat Gold'),key+' must not inherit Gold production');
+}
+assert(!sandbox.window.DTRProduction.POB_KEYS.includes('forja-del-vacio'), 'Forja is retired and cannot be a production node');
+
 console.log('DTR production runtime audit passed (Gold, Scrap Smelter, visible materials and calculator bridge).');

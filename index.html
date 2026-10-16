@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="./dtr-calculator.css">
   <link rel="stylesheet" href="./dtr-production.css">
   <link rel="stylesheet" href="./dtr-calculator-mobile.css">
+  <link rel="stylesheet" href="./dtr-forum.css">
 </head>
 <body>
   <div class="ambient-grid" aria-hidden="true"></div>
@@ -60,9 +61,9 @@
     <button class="tab active" type="button" data-view="overview"><span>00</span>ALL NODES</button>
     <button class="tab" type="button" data-view="deterrence-sanctum"><span>01</span>SANCTUM</button>
     <button class="tab" type="button" data-view="ravenna-invicta"><span>02</span>INVICTA</button>
-    <button class="tab" type="button" data-view="forja-del-vacio"><span>03</span>FORJA</button>
-    <button class="tab" type="button" data-view="fort-torrelavega"><span>04</span>TORRELAVEGA</button>
-    <button class="tab" type="button" data-view="calculator"><span>05</span>CALCULATOR</button>
+    <button class="tab" type="button" data-view="fort-torrelavega"><span>03</span>TORRELAVEGA</button>
+    <button class="tab" type="button" data-view="calculator"><span>04</span>CALCULATOR</button>
+    <button class="tab" type="button" data-view="forum"><span>05</span>FORUM</button>
   </nav>
 
   <main class="command-frame">
@@ -71,7 +72,7 @@
         <div class="network-identity">
           <p class="section-kicker">CORSAIR BASE NETWORK</p>
           <h2>Operational Overview</h2>
-          <p class="section-subline">Four POB nodes // maintenance // reserves // movement</p>
+          <p class="section-subline">Three active POB nodes // maintenance // reserves // movement</p>
         </div>
         <div class="network-state" id="networkState"><i></i><div><small>NETWORK STATE</small><strong>AWAITING DATA</strong></div></div>
       </div>
@@ -105,6 +106,83 @@
 
     <section id="calculatorView" class="view calculator-view" hidden>
       <div class="calculator-empty">LOADING RECIPE CATALOG…</div>
+    </section>
+
+
+    <section id="forumView" class="view dtr-forum-view" hidden>
+      <header class="dtr-forum-hero">
+        <div><p class="section-kicker">CORSAIR SECURE NETWORK // COMMUNICATIONS</p><h2>Forum Transmission Composer</h2><p>WRITE A POST, CHECK THE PREVIEW, THEN COPY THE GENERATED FORUM BB CODE.</p></div>
+        <em>LOCAL DRAFTS // NO ACCOUNT REQUIRED</em>
+      </header>
+      <nav class="dtr-forum-lenses" role="tablist" aria-label="Forum composer views">
+        <button type="button" role="tab" data-forum-lens="write" aria-controls="dtrForumWrite" aria-selected="true">01 WRITE</button>
+        <button type="button" role="tab" data-forum-lens="preview" aria-controls="dtrForumPreviewPanel" aria-selected="false">02 PREVIEW</button>
+        <button type="button" role="tab" data-forum-lens="code" aria-controls="dtrForumCodePanel" aria-selected="false">03 BB CODE</button>
+      </nav>
+      <div class="dtr-forum-grid">
+        <section class="dtr-forum-panel" id="dtrForumWrite" data-forum-panel="write" aria-label="Write transmission">
+          <div class="dtr-forum-panel-head"><strong>01 // WRITE TRANSMISSION</strong><small id="dtrForumCount">0 CHARACTERS</small></div>
+          <div class="dtr-forum-fields">
+            <label class="dtr-forum-field wide"><span>LOAD SAVED SENDER</span><select id="dtrForumSenderList"><option value="">CUSTOM / ENTER SENDER</option></select><small>ANY CHARACTER MAY SEND. PROFILES ARE STORED ON THIS DEVICE.</small></label>
+            <label class="dtr-forum-field"><span>SENDER ID</span><input id="dtrForum_sender" data-forum-field maxlength="100" placeholder="Character or organisation name"></label>
+            <label class="dtr-forum-field"><span>ROLE / SIGNATURE TITLE</span><input id="dtrForum_role" data-forum-field maxlength="110" placeholder="Optional rank or title"></label>
+            <label class="dtr-forum-field"><span>LOCATION</span><input id="dtrForum_location" data-forum-field maxlength="150" placeholder="Origin of transmission"></label>
+            <label class="dtr-forum-field"><span>RECIPIENT</span><input id="dtrForum_recipient" data-forum-field maxlength="160" placeholder="Recipient / office / organisation"></label>
+            <label class="dtr-forum-field"><span>ENCRYPTION</span><input id="dtrForum_encryption" data-forum-field maxlength="130" placeholder="High Encryption / Open Channel / etc."></label>
+            <label class="dtr-forum-field"><span>SUBJECT (OPTIONAL)</span><input id="dtrForum_subject" data-forum-field maxlength="160" placeholder="Short transmission subject"></label>
+            <label class="dtr-forum-field wide"><span>OPENING (OPTIONAL)</span><input id="dtrForum_opening" data-forum-field maxlength="220" placeholder="Elders, fellow Corsairs, ..."></label>
+            <div class="dtr-forum-field wide">
+              <label class="dtr-forum-message-label" for="dtrForum_message">MESSAGE</label>
+              <div class="dtr-forum-tools" role="toolbar" aria-label="BBCode formatting tools">
+                <button type="button" data-forum-format="bold">BOLD</button><button type="button" data-forum-format="italic">ITALIC</button>
+                <button type="button" data-forum-format="underline">UNDERLINE</button><button type="button" data-forum-format="heading">HEADING</button>
+                <button type="button" data-forum-format="quote">QUOTE</button><button type="button" data-forum-format="spoiler">SPOILER</button>
+                <button type="button" data-forum-format="image">IMAGE</button><button type="button" data-forum-format="url">LINK</button>
+                <button type="button" data-forum-format="list">LIST</button>
+              </div>
+              <textarea id="dtrForum_message" data-forum-field rows="16" spellcheck="true" placeholder="Write your transmission. Plain text is fine; you can also paste existing [spoiler] and [img] BBCode here."></textarea>
+              <small>PLAIN TEXT OR BB CODE // **BOLD** AND ## HEADINGS ARE SUPPORTED.</small>
+            </div>
+            <label class="dtr-forum-field"><span>SIGN-OFF (OPTIONAL)</span><input id="dtrForum_closing" data-forum-field maxlength="150" placeholder="Con respeto, / Regards, ..."></label>
+            <label class="dtr-forum-field"><span>DRAFT NAME</span><input id="dtrForum_draftName" data-forum-field maxlength="100" placeholder="For your local draft archive"></label>
+            <details class="dtr-forum-advanced">
+              <summary>VISUAL SETTINGS // IMAGE URLS</summary>
+              <p class="dtr-forum-image-note">Corsair template images are preset but editable. Clear a field to omit an image.</p>
+              <div class="dtr-forum-fields">
+                <label class="dtr-forum-field wide"><span>TOP BANNER</span><input id="dtrForum_topImage" data-forum-field inputmode="url" placeholder="https://..."></label>
+                <label class="dtr-forum-field"><span>LEFT DECORATION</span><input id="dtrForum_leftImage" data-forum-field inputmode="url" placeholder="https://..."></label>
+                <label class="dtr-forum-field"><span>RIGHT DECORATION</span><input id="dtrForum_rightImage" data-forum-field inputmode="url" placeholder="https://..."></label>
+                <label class="dtr-forum-field wide"><span>FOOTER IMAGE</span><input id="dtrForum_footerImage" data-forum-field inputmode="url" placeholder="https://..."></label>
+              </div>
+            </details>
+          </div>
+          <div class="dtr-forum-actions">
+            <button type="button" class="primary" data-forum-action="copy">COPY BB CODE</button>
+            <button type="button" data-forum-action="save">SAVE DRAFT</button>
+            <button type="button" data-forum-action="saveSender">SAVE SENDER</button>
+            <button type="button" data-forum-action="clear">CLEAR MESSAGE</button>
+          </div>
+          <div class="dtr-forum-actions">
+            <select id="dtrForumDraftList" aria-label="Saved drafts"><option value="">SELECT A SAVED DRAFT</option></select>
+            <button type="button" data-forum-action="load">LOAD DRAFT</button>
+            <button type="button" class="danger" data-forum-action="delete">DELETE DRAFT</button>
+            <button type="button" class="danger" data-forum-action="removeSender">REMOVE SENDER</button>
+            <small id="dtrForumDraftCount">0 SAVED</small>
+          </div>
+          <p class="dtr-forum-status" id="dtrForumStatus" aria-live="polite">LOCAL AUTOSAVE ACTIVE</p>
+          <p class="dtr-forum-hint">CURRENT TEXT, SAVED DRAFTS AND SENDER PROFILES STAY IN YOUR BROWSER. NOTHING IS UPLOADED TO GITHUB.</p>
+        </section>
+        <section class="dtr-forum-panel" id="dtrForumPreviewPanel" data-forum-panel="preview" aria-label="Live preview">
+          <div class="dtr-forum-panel-head"><strong>02 // LIVE FORUM PREVIEW</strong><small>APPROXIMATE RENDER</small></div>
+          <div id="dtrForumPreview" class="dtr-forum-preview-frame"></div>
+          <div class="dtr-forum-actions"><button type="button" class="primary" data-forum-action="copy">COPY BB CODE</button></div>
+        </section>
+        <section class="dtr-forum-panel" id="dtrForumCodePanel" data-forum-panel="code" aria-label="Generated forum BBCode">
+          <div class="dtr-forum-panel-head"><strong>03 // GENERATED FORUM BB CODE</strong><small>READY TO PASTE</small></div>
+          <textarea id="dtrForumCode" class="dtr-forum-code" readonly spellcheck="false" aria-label="Generated forum BBCode"></textarea>
+          <div class="dtr-forum-actions"><button type="button" class="primary" data-forum-action="copy">COPY BB CODE</button></div>
+        </section>
+      </div>
     </section>
 
     <section id="detailView" class="view" hidden>
@@ -203,6 +281,7 @@
   <script src="./dtr-procurement-prices.js"></script>
   <script src="./dtr-calculator.js"></script>
   <script src="./dtr-production.js"></script>
+  <script src="./dtr-forum.js"></script>
   <script src="./dtr-quality.js"></script>
   <script src="./dtr-uplink.js"></script>
 </body>

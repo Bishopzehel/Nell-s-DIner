@@ -21,7 +21,6 @@
   const POBS = Object.freeze([
     { key: 'deterrence-sanctum', short: 'SANCTUM', label: 'Deterrence Sanctum', aliases: ['deterrence sanctum'] },
     { key: 'ravenna-invicta', short: 'INVICTA', label: 'Ravenna Invicta', aliases: ['ravenna invicta', 'invicta'] },
-    { key: 'forja-del-vacio', short: 'FORJA', label: 'Forja del Vacio', aliases: ['forja del vacio', 'forja del vacío'] },
     { key: 'fort-torrelavega', short: 'TORRELAVEGA', label: 'Fort Torrelavega', aliases: ['fort torrelavega', 'torrelavega'] }
   ]);
 
@@ -31,7 +30,7 @@
     { key: 'consumer goods', label: 'Consumer Goods', code: 'GOODS', critical: 2500, warn: 15000 }
   ]);
 
-  const VALID_VIEWS = new Set(['overview', 'calculator', ...POBS.map(pob => pob.key)]);
+  const VALID_VIEWS = new Set(['overview', 'calculator', 'forum', ...POBS.map(pob => pob.key)]);
   const numberFormat = new Intl.NumberFormat(LOCALE);
   const $ = id => document.getElementById(id);
   const E = {
@@ -41,6 +40,7 @@
     tabs: $('tabs'),
     overview: $('overviewView'),
     calculator: $('calculatorView'),
+    forum: $('forumView'),
     detail: $('detailView'),
     grid: $('overviewGrid'),
     overviewSync: $('overviewSync'),
@@ -621,20 +621,20 @@
     const credits = totalMetric(creditsRaw);
     const previousCredits = totalMetric(creditsRaw, previousBases);
 
-    E.metricNodes.textContent = `${found}/4`;
+    E.metricNodes.textContent = `${found}/${POBS.length}`;
     E.metricNodesSub.textContent = mode === 'cache'
       ? `CACHED SNAPSHOT // ${ageText()}`
-      : found === 4
+      : found === POBS.length
         ? 'ALL NODES VERIFIED'
-        : `${4 - found} NODE${4 - found === 1 ? '' : 'S'} MISSING`;
+        : `${POBS.length - found} NODE${POBS.length - found === 1 ? '' : 'S'} MISSING`;
     E.metricCredits.textContent = credits === null ? '—' : cash(credits);
     E.metricCreditsDelta.innerHTML = deltaMarkup(delta(credits, previousCredits));
     E.metricAlerts.textContent = String(alerts);
     E.metricAlertsSub.textContent = alerts ? 'ATTENTION REQUIRED' : 'NO ACTIVE ALERTS';
 
-    const tone = found < 4 ? 'danger' : alerts ? 'warn' : 'good';
+    const tone = found < POBS.length ? 'danger' : alerts ? 'warn' : 'good';
     E.networkState.dataset.tone = tone;
-    E.networkState.querySelector('strong').textContent = found < 4
+    E.networkState.querySelector('strong').textContent = found < POBS.length
       ? 'NETWORK DEGRADED'
       : alerts
         ? 'NODES ONLINE // ALERTS ACTIVE'
@@ -689,7 +689,7 @@
 
   function renderMatrix() {
     const rows = matrixRows();
-    E.matrix.innerHTML = `<div class="matrix-table" role="table" aria-label="Cross-POB reserve matrix"><div class="matrix-row matrix-head" role="row"><span role="columnheader">COMMODITY</span>${POBS.map(pob => `<span role="columnheader">${esc(pob.short)}</span>`).join('')}</div>${rows.map(row => `<div class="matrix-row" role="row"><strong role="rowheader">${esc(row.label)}${row.maintenance ? '<small>MAINT</small>' : `<small>PIN ${row.pobKeys?.size || 0}/4</small>`}</strong>${POBS.map(pob => {
+    E.matrix.innerHTML = `<div class="matrix-table" role="table" aria-label="Cross-POB reserve matrix"><div class="matrix-row matrix-head" role="row"><span role="columnheader">COMMODITY</span>${POBS.map(pob => `<span role="columnheader">${esc(pob.short)}</span>`).join('')}</div>${rows.map(row => `<div class="matrix-row" role="row"><strong role="rowheader">${esc(row.label)}${row.maintenance ? '<small>MAINT</small>' : `<small>PIN ${row.pobKeys?.size || 0}/${POBS.length}</small>`}</strong>${POBS.map(pob => {
       const base = bases.get(pob.key);
       const item = base ? itemByName(base, row.label) : null;
       const state = row.maintenance ? maintenanceState(item, row.maintenance) : stockState(item);
@@ -821,9 +821,11 @@
   function render() {
     renderOverview();
     const calculator = view === 'calculator';
-    const detail = view !== 'overview' && !calculator;
+    const forum = view === 'forum';
+    const detail = view !== 'overview' && !calculator && !forum;
     E.overview.hidden = view !== 'overview';
     E.calculator.hidden = !calculator;
+    E.forum.hidden = !forum;
     E.detail.hidden = !detail;
     E.tabs.querySelectorAll('.tab').forEach(button => {
       const active = button.dataset.view === view;
@@ -833,6 +835,7 @@
     });
     if (detail) renderDetail(view);
     if (calculator) window.DTRCalculator?.render?.();
+    if (forum) window.DTRForum?.render?.();
   }
 
   function show(next, itemSearch = '') {
@@ -918,7 +921,7 @@
         lastError = '';
         rebuild();
         const found = POBS.filter(pob => bases.get(pob.key)).length;
-        status('live', `${found}/4 NODES LIVE`);
+        status('live', `${found}/${POBS.length} NODES LIVE`);
         render();
         if (!stored) {
           E.error.hidden = false;

@@ -404,11 +404,11 @@ input:focus-visible,
   }
 
   .matrix-table {
-    min-width: 620px;
+    min-width: 550px;
   }
 
   .matrix-row {
-    grid-template-columns: 150px repeat(4, minmax(112px, 1fr));
+    grid-template-columns: 150px repeat(3, minmax(112px, 1fr));
   }
 
   .matrix-row > strong,
