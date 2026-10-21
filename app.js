@@ -10,24 +10,22 @@
   const STALE_DANGER_MS = 60 * 60 * 1000;
 
   const KEYS = Object.freeze({
-    live: 'dtr:pobs:live:v2',
-    previous: 'dtr:pobs:previous:v2',
-    legacyWatch: 'dtr:watchlist:v1',
-    pins: 'dtr:pob-pins:v2',
-    view: 'dtr:view:v1',
-    recoveries: 'dtr:storage-recoveries:v1'
+    live: 'elcano:pobs:live:v1',
+    previous: 'elcano:pobs:previous:v1',
+    legacyWatch: 'elcano:watchlist:v1',
+    pins: 'elcano:pob-pins:v1',
+    view: 'elcano:view:v1',
+    recoveries: 'elcano:storage-recoveries:v1'
   });
 
   const POBS = Object.freeze([
-    { key: 'deterrence-sanctum', short: 'SANCTUM', label: 'Deterrence Sanctum', aliases: ['deterrence sanctum'] },
-    { key: 'ravenna-invicta', short: 'INVICTA', label: 'Ravenna Invicta', aliases: ['ravenna invicta', 'invicta'] },
-    { key: 'fort-torrelavega', short: 'TORRELAVEGA', label: 'Fort Torrelavega', aliases: ['fort torrelavega', 'torrelavega'] }
+    { key: 'elcano-manufacturing-complex', short: 'ELCANO', label: 'Elcano Manufacturing Complex', aliases: ['elcano manufacturing complex', 'elcano_manufacturing_complex'] }
   ]);
 
   const MAINT = Object.freeze([
-    { key: 'basic alloy', label: 'Basic Alloy', code: 'ALLOY', critical: 2500, warn: 15000 },
-    { key: 'food rations', label: 'Food Rations', code: 'FOOD', critical: 2500, warn: 15000 },
-    { key: 'consumer goods', label: 'Consumer Goods', code: 'GOODS', critical: 2500, warn: 15000 }
+    { key: 'basic alloy', label: 'Basic Alloy', code: 'ALLOY' },
+    { key: 'food rations', label: 'Food Rations', code: 'FOOD' },
+    { key: 'consumer goods', label: 'Consumer Goods', code: 'GOODS' }
   ]);
 
   const VALID_VIEWS = new Set(['overview', 'calculator', 'forum', ...POBS.map(pob => pob.key)]);
@@ -160,7 +158,7 @@
 
   function recoverMalformedJson(key, raw) {
     const at = Date.now();
-    const backupKey = `dtr:recovery:${at}:${key.replace(/[^a-z0-9]+/gi, '-')}`;
+    const backupKey = `elcano:recovery:${at}:${key.replace(/[^a-z0-9]+/gi, '-')}`;
     try {
       localStorage.setItem(backupKey, JSON.stringify({
         schemaVersion: 1,
@@ -403,7 +401,7 @@
       if (bounds.min > 0 && quantity < bounds.min * 1.25) return 'warn';
       return 'good';
     }
-    if (fallback) {
+    if (Number.isFinite(fallback?.critical) && Number.isFinite(fallback?.warn)) {
       if (quantity < fallback.critical) return 'danger';
       if (quantity < fallback.warn) return 'warn';
       return 'good';
@@ -458,6 +456,7 @@
     const state = maintenanceState(item, definition);
     if (state === 'danger') return 'CRITICAL RESERVE';
     if (state === 'warn') return 'LOW RESERVE';
+    if (state === 'muted') return 'LIMITS NOT REPORTED';
     return 'OPERATIONAL';
   }
 
@@ -557,7 +556,7 @@
           title: `${supply.label.toUpperCase()} NOT REPORTED`,
           detail: 'The current feed does not contain a verified quantity.'
         });
-      } else if (state !== 'good') {
+      } else if (state !== 'good' && state !== 'muted') {
         alerts.push({
           tone: state,
           title: `${supply.label.toUpperCase()} ${state === 'danger' ? 'CRITICAL' : 'LOW'}`,
@@ -965,7 +964,7 @@
   }
 
   function storageCheck() {
-    const key = `dtr:probe:${Date.now()}`;
+    const key = `elcano:probe:${Date.now()}`;
     try {
       localStorage.setItem(key, 'ok');
       const ready = localStorage.getItem(key) === 'ok';

@@ -3,8 +3,8 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '0.9.1', build: '2026.10.16-E' });
-  const ATTENTION_KEY = 'dtr:attention:v1';
+  const META = Object.freeze({ version: '1.0.0', build: '2026.10.21-ELCANO' });
+  const ATTENTION_KEY = 'elcano:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
   let attention = false;
@@ -43,7 +43,7 @@
     if ($('dtrQuickbar')) return;
     const tabs = $('tabs');
     if (!tabs) return;
-    tabs.insertAdjacentHTML('afterend', `<section class="dtr-quickbar" id="dtrQuickbar" aria-label="DTR command controls">
+    tabs.insertAdjacentHTML('afterend', `<section class="dtr-quickbar" id="dtrQuickbar" aria-label="Elcano command controls">
       <div class="dtr-quickbar-inner">
         <button class="dtr-attention-toggle" id="dtrAttentionToggle" type="button" aria-pressed="false" aria-label="Show only issues">
           <span>ATTENTION</span><small>ONLY ISSUES</small><b id="dtrAttentionCount">0</b>
@@ -81,7 +81,7 @@
 
   function mountMobileNav() {
     if ($('dtrMobileNav')) return;
-    document.body.insertAdjacentHTML('beforeend', `<nav class="dtr-mobile-nav" id="dtrMobileNav" aria-label="DTR mobile POB navigation">${mobilePobs().map(pob => `<button type="button" data-mobile-view="${pob.view}" aria-label="${pob.label}"><small>${pob.index}</small><span>${pob.short}</span></button>`).join('')}</nav>`);
+    document.body.insertAdjacentHTML('beforeend', `<nav class="dtr-mobile-nav" id="dtrMobileNav" aria-label="Elcano mobile POB navigation">${mobilePobs().map(pob => `<button type="button" data-mobile-view="${pob.view}" aria-label="${pob.label}"><small>${pob.index}</small><span>${pob.short}</span></button>`).join('')}</nav>`);
     $('dtrMobileNav')?.addEventListener('click', event => {
       const button = event.target.closest('[data-mobile-view]');
       if (!button) return;
@@ -174,7 +174,7 @@
     const storageReady = window.DTRApp?.storageCheck?.() ?? false;
     const storageFaults = state.storageFaults?.length || 0;
     const recoveries = state.recoveries?.length || 0;
-    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'shipyardPanel', 'overviewGrid', 'networkMatrix', 'systemPanel']
+    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'inventoryBody', 'overviewGrid', 'networkMatrix', 'systemPanel']
       .every(id => Boolean($(id)));
     const runtimeReady = Boolean(window.DTRApp) && Boolean(window.DTRForum) && requiredShell && runtimeEvents.length === 0;
     const matches = [...(state.bases?.values?.() || [])].filter(Boolean).length;
@@ -236,7 +236,7 @@
         'CONNECTION',
         navigator.onLine ? 'good' : 'warn',
         navigator.onLine ? 'ONLINE' : 'OFFLINE',
-        navigator.onLine ? 'Network access is available.' : 'Cached DTR data remains available; live telemetry is paused.'
+        navigator.onLine ? 'Network access is available.' : 'Cached Elcano data remains available; live telemetry is paused.'
       ),
       diagnostic('telemetry', 'DARKSTAT UPLINK', telemetryTone, telemetryStatus, freshness),
       diagnostic(
@@ -244,7 +244,7 @@
         'POB MATCHES',
         matches === (window.DTRApp?.POBS?.length || 0) ? 'good' : matches ? 'warn' : 'danger',
         `${matches}/${window.DTRApp?.POBS?.length || 0}`,
-        matches === (window.DTRApp?.POBS?.length || 0) ? 'All tracked DTR POBs resolve from the current app state.' : 'One or more tracked POBs are missing from the current app state.'
+        matches === (window.DTRApp?.POBS?.length || 0) ? 'The tracked Elcano POB resolves from the current app state.' : 'The Elcano POB is missing from the current app state.'
       ),
       diagnostic(
         'recipes',
@@ -260,14 +260,14 @@
         'PWA SHELL',
         shellReady ? 'good' : 'warn',
         standalone() ? 'STANDALONE' : shellReady ? 'READY' : 'CHECKING',
-        standalone() ? 'DTR is running in its dedicated app window.' : shellReady ? 'Offline startup shell is registered.' : 'Service-worker control is not active yet.'
+        standalone() ? 'Elcano Control is running in its dedicated app window.' : shellReady ? 'Offline startup shell is registered.' : 'Service-worker control is not active yet.'
       ),
       diagnostic(
         'update',
         'APP UPDATE',
         updateReady ? 'warn' : 'good',
         applying ? 'APPLYING' : updateReady ? 'UPDATE READY' : 'CURRENT',
-        applying ? 'DTR is switching to the approved build.' : updateReady ? 'A newer DTR shell is waiting for UPDATE NOW.' : 'No unapplied DTR build is currently detected.'
+        applying ? 'Elcano Control is switching to the approved build.' : updateReady ? 'A newer Elcano shell is waiting for UPDATE NOW.' : 'No unapplied Elcano build is currently detected.'
       )
     ];
   }
@@ -297,7 +297,7 @@
     const state = appState();
     const checks = collectDiagnostics();
     return [
-      'DTR SYSTEM CHECK',
+      'ELCANO SYSTEM CHECK',
       `GENERATED: ${new Date().toISOString()}`,
       `APP: v${META.version} // BUILD ${META.build}`,
       `WINDOW: ${standalone() ? 'STANDALONE APP' : 'BROWSER'}`,
@@ -355,7 +355,7 @@
     const badge = document.createElement('span');
     badge.id = 'dtrBuildBadge';
     badge.className = 'dtr-footer-build';
-    badge.textContent = `DTR v${META.version} // ${META.build}`;
+    badge.textContent = `ELCANO v${META.version} // ${META.build}`;
     footer.appendChild(badge);
   }
 

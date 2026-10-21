@@ -95,7 +95,7 @@
       ? "In Safari, tap Share, then choose Add to Home Screen."
       : "Open your browser menu and choose Install app or Add to Home screen.";
     showPanel({
-      heading: "ADD DTR TO THIS DEVICE",
+      heading: "ADD ELCANO CONTROL TO THIS DEVICE",
       body,
       action: "instructions",
       actionLabel: "GOT IT"
@@ -105,7 +105,7 @@
   function openInstall() {
     if (state.updateWorker) {
       showPanel({
-        heading: "DTR UPDATE READY",
+        heading: "ELCANO UPDATE READY",
         body: "A verified update is ready. Apply it now to reload the command display.",
         action: "update",
         actionLabel: "UPDATE NOW"
@@ -115,7 +115,7 @@
 
     if (isStandalone()) {
       showPanel({
-        heading: "DTR IS INSTALLED",
+        heading: "ELCANO CONTROL IS INSTALLED",
         body: "This device is already running the standalone command app.",
         action: "instructions",
         actionLabel: "CLOSE"
@@ -126,7 +126,7 @@
     if (state.installPrompt) {
       showPanel({
         heading: "INSTALL ON THIS DEVICE",
-        body: "Add DTR to your home screen for faster access and offline cache support.",
+        body: "Add Elcano Control to your home screen for faster access and offline cache support.",
         action: "install",
         actionLabel: "INSTALL"
       });
@@ -215,7 +215,7 @@
         if (document.visibilityState === "visible") update();
       });
     } catch (error) {
-      console.warn("DTR service worker registration failed.", error);
+      console.warn("Elcano service worker registration failed.", error);
       emit();
     }
   }

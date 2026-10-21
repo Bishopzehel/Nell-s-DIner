@@ -4,16 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050506">
-  <meta name="description" content="DTR Corsair POB Network Control">
-  <meta name="application-name" content="DTR Control">
+  <meta name="description" content="Elcano Manufacturing Complex operations dashboard">
+  <meta name="application-name" content="Elcano Control">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DTR Control">
-  <title>DTR // POB Network</title>
+  <meta name="apple-mobile-web-app-title" content="Elcano Control">
+  <title>Elcano // POB Control</title>
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="./assets/elcano-mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Oxanium:wght@500;600;700&display=swap" rel="stylesheet">
@@ -23,8 +22,6 @@
   <link rel="stylesheet" href="./dtr-uplink.css">
   <link rel="stylesheet" href="./dtr-responsive.css">
   <link rel="stylesheet" href="./dtr-calculator.css">
-  <link rel="stylesheet" href="./dtr-production.css">
-  <link rel="stylesheet" href="./dtr-shipyard.css">
   <link rel="stylesheet" href="./dtr-calculator-mobile.css">
   <link rel="stylesheet" href="./dtr-forum.css">
 </head>
@@ -36,8 +33,8 @@
     <div class="brand-shell">
       <div class="brand-sigil" aria-hidden="true"></div>
       <div class="brand-copy">
-        <p class="eyebrow">CORSAIR SECURE NETWORK // DTR</p>
-        <h1><span class="brand-main">DTR</span><span class="brand-slash">//</span><span class="brand-sub">POB NETWORK</span></h1>
+        <p class="eyebrow">ELCANO MANUFACTURING // OPERATIONS</p>
+        <h1><span class="brand-main">ELCANO</span><span class="brand-slash">//</span><span class="brand-sub">POB CONTROL</span></h1>
         <div class="brand-meta">
           <span id="headerFreshness" aria-live="polite">AWAITING TELEMETRY</span><i></i>
           <span id="headerClock">--:--:--</span>
@@ -58,22 +55,20 @@
 
   <div class="transmission-rail" aria-hidden="true"><span>NETWORK STATUS RECEIVED</span></div>
 
-  <nav class="tabs" id="tabs" aria-label="DTR workspace navigation">
+  <nav class="tabs" id="tabs" aria-label="Elcano workspace navigation">
     <button class="tab active" type="button" data-view="overview"><span>00</span>ALL NODES</button>
-    <button class="tab" type="button" data-view="deterrence-sanctum"><span>01</span>SANCTUM</button>
-    <button class="tab" type="button" data-view="ravenna-invicta"><span>02</span>INVICTA</button>
-    <button class="tab" type="button" data-view="fort-torrelavega"><span>03</span>TORRELAVEGA</button>
-    <button class="tab" type="button" data-view="calculator"><span>04</span>CALCULATOR</button>
-    <button class="tab" type="button" data-view="forum"><span>05</span>FORUM</button>
+    <button class="tab" type="button" data-view="elcano-manufacturing-complex"><span>01</span>ELCANO BASE</button>
+    <button class="tab" type="button" data-view="calculator"><span>02</span>CALCULATOR</button>
+    <button class="tab" type="button" data-view="forum"><span>03</span>FORUM</button>
   </nav>
 
   <main class="command-frame">
     <section id="overviewView" class="view">
       <div class="network-hero">
         <div class="network-identity">
-          <p class="section-kicker">CORSAIR BASE NETWORK</p>
+          <p class="section-kicker">ELCANO BASE NETWORK</p>
           <h2>Operational Overview</h2>
-          <p class="section-subline">Three active POB nodes // maintenance // reserves // movement</p>
+          <p class="section-subline">Elcano Manufacturing Complex // live status // reserves // inventory</p>
         </div>
         <div class="network-state" id="networkState"><i></i><div><small>NETWORK STATE</small><strong>AWAITING DATA</strong></div></div>
       </div>
@@ -112,7 +107,7 @@
 
     <section id="forumView" class="view dtr-forum-view" hidden>
       <header class="dtr-forum-hero">
-        <div><p class="section-kicker">CORSAIR SECURE NETWORK // COMMUNICATIONS</p><h2>Forum Transmission Composer</h2><p>WRITE A POST, CHECK THE PREVIEW, THEN COPY THE GENERATED FORUM BB CODE.</p></div>
+        <div><p class="section-kicker">ELCANO NETWORK // COMMUNICATIONS</p><h2>Forum Transmission Composer</h2><p>WRITE A POST, CHECK THE PREVIEW, THEN COPY THE GENERATED FORUM BB CODE.</p></div>
         <em>LOCAL DRAFTS // NO ACCOUNT REQUIRED</em>
       </header>
       <p class="dtr-forum-copy-feedback" id="dtrForumCopyFeedback" role="status" aria-live="polite" hidden></p>
@@ -150,10 +145,10 @@
             <label class="dtr-forum-field"><span>DRAFT NAME</span><input id="dtrForum_draftName" data-forum-field maxlength="100" placeholder="For your local draft archive"></label>
             <details class="dtr-forum-advanced">
               <summary>VISUAL SETTINGS // IMAGE URLS</summary>
-              <p class="dtr-forum-image-note">The top banner and footer are optional. The personal sender image is set above. The DTR serpent crest on the right is permanent and cannot be replaced.</p>
+              <p class="dtr-forum-image-note">All artwork is optional. Add a sender image, banner or footer if your post needs one.</p>
               <div class="dtr-forum-fields">
                 <label class="dtr-forum-field wide"><span>TOP BANNER</span><input id="dtrForum_topImage" data-forum-field inputmode="url" placeholder="https://..."></label>
-                <div class="dtr-forum-field dtr-forum-fixed-crest" aria-label="Fixed DTR serpent logo on right"><strong>DTR SERPENT CREST / RIGHT (FIXED)</strong><img src="https://i.imgur.com/QFFOGWY.png" alt="Red DTR Corsair serpent emblem" loading="lazy"><small>ALWAYS SHOWN ON THE RIGHT OF THE MESSAGE HEADER.</small></div>
+                <label class="dtr-forum-field wide"><span>RIGHT-SIDE IMAGE</span><input id="dtrForum_rightImage" data-forum-field inputmode="url" placeholder="https://..."><small>OPTIONAL IMAGE SHOWN ON THE RIGHT OF THE MESSAGE HEADER.</small></label>
                 <label class="dtr-forum-field wide"><span>FOOTER IMAGE</span><input id="dtrForum_footerImage" data-forum-field inputmode="url" placeholder="https://..."></label>
               </div>
             </details>
@@ -212,28 +207,10 @@
 
       <section class="maintenance-panel">
         <div class="section-head compact">
-          <div><p class="section-kicker">FACILITY MAINTENANCE</p><h3>Daily Operating Reserves</h3><p class="section-subline">Basic Alloy // Food Rations // Consumer Goods</p></div>
+          <div><p class="section-kicker">FACILITY MAINTENANCE</p><h3>Operating Reserves</h3><p class="section-subline">Live commodity limits where reported // no inferred thresholds</p></div>
           <span class="facility-state" id="facilityState">CHECKING</span>
         </div>
         <div class="maintenance-grid" id="maintenanceGrid"></div>
-      </section>
-
-      <section class="production-panel" id="productionPanel" hidden>
-        <div class="section-head compact">
-          <div><p class="section-kicker">TORRELAVEGA PRODUCTION</p><h3>Production Modules</h3><p class="section-subline">Wildcat Gold // Basic Alloy // live material capacity</p></div>
-          <span class="production-state" id="productionState">CHECKING</span>
-        </div>
-        <div id="productionGrid"></div>
-      </section>
-
-      <section class="dtr-yard-panel" id="shipyardPanel" hidden>
-        <div class="section-head compact">
-          <div><p class="section-kicker">INVICTA // CAPITAL ASSEMBLY</p><h3>Shipyard Control</h3>
-            <p class="section-subline">Murmillo // Legate // Consul // Archon // live inventory &amp; build requirements</p></div>
-          <span class="dtr-yard-state" id="shipyardState">CHECKING</span>
-        </div>
-        <div class="dtr-yard-hulls" id="shipyardHulls" role="group" aria-label="Select an Invicta shipyard hull"></div>
-        <div class="dtr-yard-detail" id="shipyardDetails" aria-live="polite"></div>
       </section>
 
       <section class="watch-panel">
@@ -271,11 +248,11 @@
   </main>
 
   <div class="transmission-rail transmission-rail-end" aria-hidden="true"><span>END OF SECURE FEED</span></div>
-  <footer><span>DTR // CORSAIR POB NETWORK</span><span class="footer-sigil" aria-hidden="true"></span><span id="footerState">AWAITING TELEMETRY</span></footer>
+  <footer><span>ELCANO // POB CONTROL</span><span class="footer-sigil" aria-hidden="true"></span><span id="footerState">AWAITING TELEMETRY</span></footer>
 
   <aside class="system-overlay" id="systemPanel" role="dialog" aria-modal="true" aria-labelledby="systemTitle" hidden>
     <section class="system-sheet">
-      <header><div><small>DTR NETWORK DIAGNOSTICS</small><strong id="systemTitle">SYSTEM CHECK</strong></div><button id="systemClose" type="button">CLOSE</button></header>
+      <header><div><small>ELCANO NETWORK DIAGNOSTICS</small><strong id="systemTitle">SYSTEM CHECK</strong></div><button id="systemClose" type="button">CLOSE</button></header>
       <div class="system-overall" id="systemOverall"><i></i><div><strong>CHECKING</strong><span>Collecting app status.</span></div></div>
       <div class="system-grid" id="systemGrid"></div>
       <div class="system-actions"><button id="systemRefresh" type="button">RUN CHECK</button><button id="systemInstall" type="button">INSTALL APP</button></div>
@@ -283,7 +260,7 @@
   </aside>
 
   <aside class="install-sheet" id="installSheet" role="dialog" aria-modal="true" aria-labelledby="installTitle" hidden>
-    <div><small>DTR COMMAND APP</small><strong id="installTitle">INSTALL ON THIS DEVICE</strong><span id="installMessage">Add DTR to your home screen.</span></div>
+    <div><small>ELCANO COMMAND APP</small><strong id="installTitle">INSTALL ON THIS DEVICE</strong><span id="installMessage">Add Elcano Control to your home screen.</span></div>
     <div class="install-actions"><button id="installPrimary" type="button">INSTALL</button><button id="installClose" type="button">LATER</button></div>
   </aside>
 
@@ -292,8 +269,6 @@
   <script src="./app.js"></script>
   <script src="./dtr-procurement-prices.js"></script>
   <script src="./dtr-calculator.js"></script>
-  <script src="./dtr-production.js"></script>
-  <script src="./dtr-shipyard.js"></script>
   <script src="./dtr-forum.js"></script>
   <script src="./dtr-quality.js"></script>
   <script src="./dtr-uplink.js"></script>

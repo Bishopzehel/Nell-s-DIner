@@ -3,9 +3,8 @@
   'use strict';
 
   const CATALOG = window.DTR_RECIPE_CATALOG;
-  const STORAGE_KEY = 'dtr:calculator:v1';
-  const DEFAULT_POB = 'deterrence-sanctum';
-  const DTR_AFFILIATION = 'fc_c_grp';
+  const STORAGE_KEY = 'elcano:calculator:v1';
+  const DEFAULT_POB = 'elcano-manufacturing-complex';
   const EXOTIC_COMPONENT_ID = 'commodity_ship_part_exotic';
   const INVICTA_SHIPYARD_RECIPES = new Set([
     'ship_assembly_dsy_venator',
@@ -255,8 +254,8 @@
     const pobs = window.DTRApp?.POBS || [];
     return pobs.find(pob => pob.key === state.pobKey) || pobs[0] || {
       key: DEFAULT_POB,
-      short: 'SANCTUM',
-      label: 'Deterrence Sanctum'
+      short: 'ELCANO',
+      label: 'Elcano Manufacturing Complex'
     };
   }
 
@@ -308,8 +307,13 @@
       || automaticOption(base, group.options);
   }
 
-  function affiliationFactor(recipe) {
-    const bonus = (recipe?.bonuses || []).find(entry => entry.id === DTR_AFFILIATION);
+  function factionId(base = selectedBase()) {
+    return String(base?.faction_nickname ?? base?.factionNickname ?? '');
+  }
+
+  function affiliationFactor(recipe, base = selectedBase()) {
+    const id = factionId(base);
+    const bonus = id && (recipe?.bonuses || []).find(entry => entry.id === id);
     return bonus ? Math.max(0, finite(bonus.factor) ?? 1) : 1;
   }
 
@@ -318,14 +322,15 @@
     return raw <= 0 ? 0 : Math.ceil(raw - 1e-9);
   }
 
-  function effectiveOutput(recipe) {
+  function effectiveOutput(recipe, base = selectedBase()) {
+    const id = factionId(base);
     const affiliationOutput = (recipe?.affiliationOutputs || [])
-      .find(entry => entry.factionId === DTR_AFFILIATION);
+      .find(entry => id && entry.factionId === id);
     return affiliationOutput?.alternate || recipe?.outputs?.[0] || null;
   }
 
-  function cyclesFor(recipe) {
-    const output = effectiveOutput(recipe);
+  function cyclesFor(recipe, base) {
+    const output = effectiveOutput(recipe, base);
     const outputPerCycle = Math.max(1, finite(output?.qty) ?? 1);
     return {
       output,
@@ -383,8 +388,8 @@
   }
 
   function calculation(recipe, base) {
-    const cycle = cyclesFor(recipe);
-    const factor = affiliationFactor(recipe);
+    const cycle = cyclesFor(recipe, base);
+    const factor = affiliationFactor(recipe, base);
     const rows = requirementRows(recipe, base, cycle.cycles, factor);
     const fixedFee = Math.max(0, finite(recipe.creditCost) ?? 0) * cycle.cycles;
     const knownMaterialCost = rows.reduce((total, row) => total + (row.lineCost ?? 0), 0);
@@ -400,7 +405,7 @@
     return {
       ...cycle,
       factor,
-      authorized: !recipe.restricted || (recipe.bonuses || []).some(entry => entry.id === DTR_AFFILIATION),
+      authorized: !recipe.restricted || (recipe.bonuses || []).some(entry => entry.id === factionId(base)),
       rows,
       catalysts: catalystRows(recipe, base),
       fixedFee,
@@ -516,15 +521,15 @@
   function notesMarkup(recipe, result) {
     const extraOutputs = (recipe.outputs || []).slice(1);
     const notes = [];
-    if (recipe.restricted) notes.push(result.authorized ? 'RESTRICTED // CORSAIR IFF AUTHORIZED' : 'RESTRICTED // CORSAIR IFF NOT AUTHORIZED');
-    if (result.factor !== 1) notes.push(`CORSAIR IFF BONUS // ${result.factor.toFixed(2)}× MATERIALS`);
+    if (recipe.restricted) notes.push(result.authorized ? 'RESTRICTED // POB AFFILIATION AUTHORIZED' : 'RESTRICTED // POB AFFILIATION NOT AUTHORIZED');
+    if (result.factor !== 1) notes.push(`POB AFFILIATION BONUS // ${result.factor.toFixed(2)}× MATERIALS`);
     if (recipe.affiliationOutputs?.length) notes.push('OUTPUT VARIES BY AFFILIATION');
     if (extraOutputs.length) notes.push(`ADDITIONAL OUTPUT: ${extraOutputs.map(output => `${output.name} × ${fmt(output.qty)}`).join(' · ')}`);
     return notes.length ? `<div class="calculator-recipe-notes">${notes.map(note => `<span>${esc(note)}</span>`).join('')}</div>` : '';
   }
 
   function calculatorStatus(result, base) {
-    if (!result.authorized) return { tone: 'danger', label: 'RESTRICTED RECIPE // CORSAIR IFF NOT AUTHORIZED' };
+    if (!result.authorized) return { tone: 'danger', label: 'RESTRICTED RECIPE // POB AFFILIATION NOT AUTHORIZED' };
     if (!result.complete) return { tone: 'warn', label: `${result.missingPrices} MATERIAL PRICE${result.missingPrices === 1 ? '' : 'S'} MISSING` };
     if (!base) return { tone: 'warn', label: 'MANUAL QUOTE // SELECTED POB FEED UNAVAILABLE' };
     if (result.shortRows) return { tone: 'warn', label: `QUOTE READY // ${result.shortRows} STOCK SHORTAGE${result.shortRows === 1 ? '' : 'S'}` };
@@ -534,7 +539,7 @@
 
   function renderNoMatch(matches) {
     const pobs = pobOptions();
-    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG?.meta?.recipeCount)}"><div><p class="section-kicker">DTR PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
+    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG?.meta?.recipeCount)}"><div><p class="section-kicker">ELCANO PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
       <section class="calculator-controls"><div class="calculator-section-head"><div><span>01</span><strong>RECIPE + POB</strong></div><small>${fmt(CATALOG?.meta?.recipeCount)} MASTER RECIPES</small></div><div class="calculator-form-grid">
         <label class="calculator-field calculator-wide"><span>SEARCH RECIPE</span><input id="calculatorRecipeSearch" type="search" value="${esc(state.search)}" placeholder="REACTOR, JUMP DRIVE, HULL…" autocomplete="off"><small>TYPE A PRODUCT NAME OR RECIPE ID</small></label>
         <label class="calculator-field calculator-wide"><span>SELECTED RECIPE</span><select id="calculatorRecipeSelect">${recipeOptions(matches, '')}</select><small>0 MATCHES</small></label>
@@ -574,7 +579,7 @@
       ? 'MANUAL PRICES NOT SAVED // STORAGE UNAVAILABLE'
       : `${invictaExoticValuation ? 'EXOTIC = BASE SELLS // ' : ''}${overrideCount ? `${overrideCount} SAVED MANUAL // ` : ''}EDIT UNIT PRICES BELOW`;
 
-    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG.meta.recipeCount)}"><div><p class="section-kicker">DTR PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
+    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG.meta.recipeCount)}"><div><p class="section-kicker">ELCANO PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
       <section class="calculator-controls">
         <div class="calculator-section-head"><div><span>01</span><strong>RECIPE + POB</strong></div><small>${fmt(CATALOG.meta.recipeCount)} MASTER RECIPES</small></div>
         <div class="calculator-form-grid">

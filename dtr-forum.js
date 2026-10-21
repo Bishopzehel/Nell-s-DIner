@@ -4,23 +4,23 @@
   if (window.DTRForum) return;
 
   const KEYS = Object.freeze({
-    current: 'dtr:forum:current:v1',
-    drafts: 'dtr:forum:drafts:v1',
-    identities: 'dtr:forum:identities:v1',
-    lens: 'dtr:forum:lens:v1',
-    personalImageMigrated: 'dtr:forum:personal-image-migrated:v1'
+    current: 'elcano:forum:current:v1',
+    drafts: 'elcano:forum:drafts:v1',
+    identities: 'elcano:forum:identities:v1',
+    lens: 'elcano:forum:lens:v1',
+    personalImageMigrated: 'elcano:forum:personal-image-migrated:v1'
   });
   const ART = Object.freeze({
-    top: 'https://i.imgur.com/6eYifrM.png',
-    right: 'https://i.imgur.com/QFFOGWY.png',
-    footer: 'https://i.imgur.com/5RDPUdc.png'
+    top: '',
+    right: '',
+    footer: ''
   });
   const DEFAULT = Object.freeze({
-    sender: '', role: '', location: '', recipient: '', encryption: '',
+    sender: '', role: '', location: '', recipient: '', encryption: '', rightImage: '',
     subject: '', opening: '', message: '', closing: '', draftName: '',
     topImage: ART.top, leftImage: '', footerImage: ART.footer
   });
-  const COLORS = Object.freeze({line:'#84070c',label:'#ad0514',gold:'#ab8f66',text:'#DCDCDC'});
+  const COLORS = Object.freeze({line:'#315b70',label:'#d9b66f',gold:'#9fc4d2',text:'#DCDCDC'});
   const FIELDS = Object.keys(DEFAULT);
   let current = loadObject(KEYS.current, DEFAULT);
   let drafts = loadArray(KEYS.drafts);
@@ -131,7 +131,7 @@
 
     if (imgBbcode(s.topImage)) result.push('[align=center]' + imgBbcode(s.topImage) + '[/align]');
     const left = imgBbcode(s.leftImage, ' float=left');
-    const right = imgBbcode(ART.right, ' float=right');
+    const right = imgBbcode(s.rightImage, ' float=right');
     if (left || right) result.push(left + right);
     result.push('[hrc]' + line + '[/hrc][hrc]' + line + '[/hrc][pi amount=25]');
     [
@@ -214,7 +214,7 @@
       '<div class="dtr-forum-preview-header">' +
         '<div class="dtr-forum-preview-portrait-slot">' + picture(s.leftImage,'dtr-forum-preview-portrait','Sender character portrait') + '</div>' +
         '<div class="dtr-forum-preview-meta">' + rows.map(row => '<div><strong>' + esc(row[0]) + '</strong><span>' + esc(row[1]) + '</span></div>').join('') + '</div>' +
-        '<div class="dtr-forum-preview-crest-slot">' + picture(ART.right,'dtr-forum-preview-crest','Fixed DTR Corsair serpent emblem') + '</div>' +
+        '<div class="dtr-forum-preview-crest-slot">' + picture(s.rightImage,'dtr-forum-preview-crest','Optional right-side image') + '</div>' +
       '</div>' +
       '<div class="dtr-forum-rules"></div>' +
       '<div class="dtr-forum-preview-message">' +
