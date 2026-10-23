@@ -31,6 +31,7 @@ function savePreferences(){
   const obj={
     profile:profile.id,startId,startTouched,mode:routeMode,
     pobs:$('dtrRoutesPobs').checked,corsair:$('dtrRoutesCorsair').checked,
+    includeUnverified:$('dtrRoutesUnverified').checked,
     cargo:$('dtrRoutesCargo').value,capital:$('dtrRoutesCapital').value,
     maxTime:$('dtrRoutesMaxTime').value,legs:$('dtrRoutesLegs').value,
     returnScope:$('dtrRoutesReturn').value,
@@ -52,7 +53,7 @@ function restorePreferences(){
   for(const [id,key,defaultValue] of [
     ['dtrRoutesPobs','pobs',false],['dtrRoutesCorsair','corsair',true],
     ['dtrRoutesMixed','mixed',true],['dtrRoutesEmpty','empty',false],
-    ['dtrRoutesUnknown','unknown',false]]){
+    ['dtrRoutesUnknown','unknown',false],['dtrRoutesUnverified','includeUnverified',false]]){
     $(id).checked=typeof saved[key]==='boolean'?saved[key]:defaultValue;
   }
   $('dtrRoutesCargo').value=profile.cargo;
@@ -80,14 +81,17 @@ function refreshControls(){
     qty(profile.cargo)+' MAX CARGO',profile.cruise+' CRUISE',
     $('dtrRoutesPobs').checked?'POBS ON':'POBS OFF',
     $('dtrRoutesCorsair').checked?'CORSAIR ON':'CORSAIR OFF',
+    $('dtrRoutesCorsair').checked?$('dtrRoutesUnverified').checked?'UNVERIFIED DOCKS OPT-IN':'STRICT DOCK FILTER':'DOCKING NOT VERIFIED',
     routeMode==='one'?'ONE WAY':'RETURN TRADE',
     qty(Number($('dtrRoutesCapital').value||0))+' $ CAPITAL',
     $('dtrRoutesMixed').checked?'MIXED CARGO':'ONE GOOD PER LEG'
   ].join(' // ');
   const accessNote=$('dtrRoutesAccessNote');
-  if(!$('dtrRoutesCorsair').checked)accessNote.textContent='CORSAIR FILTER OFF // YOUR OWN ID AND REPUTATION MAY STILL LIMIT DOCKING. VERIFY ACCESS IN GAME.';
-  else if(!access?.indexReady)accessNote.textContent='CORSAIR ON // FACTION REPUTATIONS UNAVAILABLE. ACCESS REMAINS UNVERIFIED; NO BASES AUTOMATICALLY BLOCKED.';
-  else accessNote.textContent='CORSAIR ID PREDICTION // '+qty(access.counts.restricted)+' HOSTILE NPC BASES FILTERED // '+qty(access.counts.unverified)+' ACCESS UNVERIFIED. PERSONAL REPUTATION AND POB WHITELISTS MAY DIFFER.';
+  if(!$('dtrRoutesCorsair').checked)accessNote.textContent='CORSAIR FILTER OFF // NO ID DOCK CHECK. VERIFY ACCESS FOR YOUR OWN FACTION.';
+  else if(!access?.indexReady)accessNote.textContent='CORSAIR ON // FACTION DATA UNAVAILABLE. UNVERIFIED BASES EXCLUDED BY DEFAULT. CHECK ADVANCED OPTIONS TO OPT IN AT YOUR OWN RISK.';
+  else accessNote.textContent='CORSAIR DOCK FILTER // '+qty(access.counts.restricted)+' RESTRICTED // '+qty(access.counts.unverified)+' UNVERIFIED'+
+    (access.includeUnverified?' (MANUALLY INCLUDED)':' (EXCLUDED)')+
+    ' // '+qty(access.blocked.length)+' TOTAL FILTERED. PERSONAL REP / FR6 / POB ACL MAY STILL DIFFER.';
 }
 function selectedOrigin(){
   return dataset?.bases?.find(b=>b.id===startId)||null;
@@ -106,9 +110,10 @@ function applyOrigin(){
 }
 function syncAccess(){
   if(!dataset)return;
-  access=assessAccess(dataset.bases,$('dtrRoutesCorsair').checked,factions);
+  access=assessAccess(dataset.bases,$('dtrRoutesCorsair').checked,factions,{includeUnverified:$('dtrRoutesUnverified').checked});
   const origin=selectedOrigin();
-  if(origin&&access.byId.get(origin.id)?.state==='restricted'&&$('dtrRoutesCorsair').checked)notice('Selected starting base is predicted hostile to the Corsair ID. Choose a different base or switch Corsair OFF.','warn');
+  if(origin&&$('dtrRoutesCorsair').checked&&access.blocked.includes(origin.id))
+    notice('This start base is restricted or unverified for Corsairs. Choose another base, turn Corsair OFF, or deliberately enable unverified docking in Advanced Search. Known denied bases stay blocked.','warn');
 }
 function setProfile(id){
   const found=PROFILES.find(p=>p.id===id);
@@ -218,14 +223,16 @@ function readParams(){
   const origin=selectedOrigin();
   if(!origin)throw Error('Please select a valid starting base. Crete may be unavailable in this market snapshot.');
   if(!$('dtrRoutesPobs').checked&&origin.kind==='pob')throw Error('To start at a POB, enable INCLUDE POBs.');
-  if($('dtrRoutesCorsair').checked&&access?.byId.get(origin.id)?.state==='restricted')
-    throw Error('Starting base is predicted hostile to the Corsair ID. Choose a different base or switch Corsair OFF.');
+  if($('dtrRoutesCorsair').checked&&access?.blocked.includes(origin.id))
+    throw Error('Starting base is excluded by the Corsair dock filter. Known restrictions always stay blocked. Unverified docks require explicit opt-in in Advanced Search.');
   const cargo=Number($('dtrRoutesCargo').value);
   if(!(cargo>0&&cargo<=profile.cargo))throw Error('Cargo volume exceeds selected cargo class.');
   const capital=Number($('dtrRoutesCapital').value);
   if(!(capital>=0))throw Error('Trading capital must not be negative.');
   const mode=routeMode==='one'?'one':$('dtrRoutesLegs').value;
   const block=access?.blocked||[];
+  if($('dtrRoutesCorsair').checked&&!access?.indexReady&&!$('dtrRoutesUnverified').checked)
+    throw Error('Corsair faction data unavailable. Strict screening blocks unknown stations. Try FORCE MARKET UPLINK or deliberately opt in to unverified docks.');
   return {
     mode,start:origin.id,cargo,capital,
     excludePobs:!$('dtrRoutesPobs').checked,
@@ -289,7 +296,7 @@ function routeStops(route,baseMap=byId()){
 }
 function accessTag(id){
   const info=access?.byId.get(id);
-  const labels={likely:'LIKELY ACCESS',restricted:'RESTRICTED',unverified:'ACCESS UNVERIFIED'};
+  const labels={likely:'LIKELY ACCESS — NOT GUARANTEED',restricted:'NO DOCK / RESTRICTED',unverified:'ACCESS UNVERIFIED'};
   return '<span data-access="'+escape(info?.state||'unverified')+'">'+
     escape(labels[info?.state]||labels.unverified)+'</span>';
 }
@@ -347,7 +354,7 @@ function openDetail(idx){
   const bases=byId(),stops=routeStops(route,bases);
   $('dtrRoutesDetailTitle').textContent=route.roundTrip?'Round Trip Manifest':'One Way Manifest';
   const head='<div class="dtr-routes-detail-lead">'+
-    '<div><small>VERIFIED PROFIT</small><strong>'+cash(route.profit)+'</strong></div>'+
+    '<div><small>EST. PROFIT</small><strong>'+cash(route.profit)+'</strong></div>'+
     '<div><small>PROFIT / HOUR</small><strong>'+cash(route.hourly)+'</strong></div>'+
     '<div><small>FLIGHT TIME</small><strong>'+duration(route.seconds)+'</strong></div>'+
     '</div>';
@@ -387,13 +394,18 @@ function renderPicker(query){
   const matches=filtered.slice(0,55);
   $('dtrRoutesPickerList').innerHTML=matches.length?matches.map(b=>{
     const ac=access?.byId.get(b.id);
-    return '<button type="button" data-route-start-id="'+escape(b.id)+'" data-access="'+escape(ac?.state||'unverified')+'"><strong>'+escape(b.name)+'</strong>'+
+    const denied=$('dtrRoutesCorsair').checked&&access?.blocked.includes(b.id);
+    return '<button type="button" data-route-start-id="'+escape(b.id)+'" data-access="'+escape(ac?.state||'unverified')+'"'+
+      (denied?' disabled title="Unavailable under current Corsair dock filter"':'')+'><strong>'+escape(b.name)+'</strong>'+
       '<small>'+escape(b.systemName||b.system||'')+' // '+(b.kind==='pob'?'POB':'NPC')+' // '+escape(ac?.state?.toUpperCase()||'UNVERIFIED')+'</small></button>';
   }).join('')+'<p>'+qty(filtered.length)+' MATCHES'+(filtered.length>55?' // TYPE MORE TO FILTER':'')+'</p>':
     '<p>NO BASE MATCHES. TRY A SYSTEM OR SHORTER SEARCH TERM.</p>';
 }
 function selectOrigin(id){
   const base=dataset?.bases.find(b=>b.id===id);if(!base)return;
+  if($('dtrRoutesCorsair').checked&&access?.blocked.includes(base.id)){
+    notice('This base is excluded by the current Corsair dock filter. Change ID or explicitly include unverified docks, but known no-dock remains blocked.','warn');return;
+  }
   startId=base.id;startPreferredId=id;startTouched=true;
   applyOrigin();syncAccess();markResultsStale();refreshControls();savePreferences();
   $('dtrRoutesPickerDialog').close();document.body.classList.remove('modal-open');
@@ -424,7 +436,7 @@ function bind(){
   });
   $('tradeRoutesView').addEventListener('change',e=>{
     if(e.target.name==='dtrRoutesMode'){setRouteMode(e.target.value);return;}
-    if(e.target.id==='dtrRoutesCorsair'){syncAccess();renderSource();}
+    if(e.target.id==='dtrRoutesCorsair'||e.target.id==='dtrRoutesUnverified'){syncAccess();renderSource();}
     if(e.target.id==='dtrRoutesPobs'){applyOrigin();}
     markResultsStale();
     refreshControls();savePreferences();
@@ -481,6 +493,7 @@ window.DTRTradeRoutes=Object.freeze({
   bootstrap,marketRefresh,runSearch,getState:()=>({
     started,busy,mode:routeMode,startId,profile:profile.id,
     corsair:$('dtrRoutesCorsair')?.checked,pobs:$('dtrRoutesPobs')?.checked,
+    includeUnverified:$('dtrRoutesUnverified')?.checked,blockedByDockPolicy:access?.blocked.length??0,
     marketMode:dataMode,navigationReady:Boolean(navigation),resultCount:results.length,
     accessCounts:access?.counts||null
   })

@@ -3,6 +3,9 @@
 export const CORSAIR_FACTION = 'fc_c_grp';
 export const DOCK_HOSTILE_THRESHOLD = -0.55;
 export const LANE_SPEED = 2500;
+// Known Corsair no-dock destinations established from player-reported behavior;
+// keep the normal planet and separate landing-site market entry paired.
+const CORSAIR_NO_DOCK_IDS = new Set(['li01_01_base','ew16_01_base']);
 export const normalize = value => String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const first=(obj,...keys)=>keys.map(k=>obj?.[k]).find(v=>v!==null&&v!==undefined&&v!=='');
 const repNumber=value=>{if(value===undefined||value===null||value==='')return null;const n=Number(value);return Number.isFinite(n)?n:null;};
@@ -51,6 +54,11 @@ export function reputationIndex(factions){
 export function baseAccess(base, corsairEnabled, index) {
   if(!corsairEnabled)return {state:'unverified',reason:'OTHER ID // PERSONAL REPUTATION UNKNOWN'};
   if(!base)return {state:'unverified',reason:'BASE UNKNOWN'};
+  const name=normalize(base.name),system=normalize(base.systemName);
+  if(CORSAIR_NO_DOCK_IDS.has(normalize(base.id))||
+     (name.startsWith('planet manhattan')&&
+      (system==='new york'||system.includes('manhattan atmosphere')||name.includes('landing site'))))
+    return {state:'restricted',reason:'KNOWN CORSAIR NO-DOCK // MANHATTAN OR LANDING SITE'};
   if(base.kind==='pob')return {state:'unverified',reason:'POB WHITELIST / OWNER RULES UNKNOWN'};
   const owner=first(base,'factionNickname','factionName');
   if(!owner)return {state:'unverified',reason:'FACTION OWNER NOT REPORTED'};
@@ -62,17 +70,19 @@ export function baseAccess(base, corsairEnabled, index) {
   if(score<DOCK_HOSTILE_THRESHOLD) return {state:'restricted',score,reason:'HOSTILE CORSAIR FACTION RELATION'};
   return {state:'likely',score,reason:'CORSAIR RELATION ABOVE DOCKING THRESHOLD'};
 }
-export function assessAccess(bases,corsairEnabled,factions){
+export function assessAccess(bases,corsairEnabled,factions,{includeUnverified=false}={}){
   const index=reputationIndex(factions);
   const byId=new Map();
   for(const base of bases||[])byId.set(base.id,baseAccess(base,corsairEnabled,index));
-  return {
-    byId,indexReady:index.ready,
-    blocked:corsairEnabled?[...byId].filter(([,a])=>a.state==='restricted').map(([id])=>id):[],
-    counts:{likely:[...byId.values()].filter(a=>a.state==='likely').length,
-      restricted:[...byId.values()].filter(a=>a.state==='restricted').length,
-      unverified:[...byId.values()].filter(a=>a.state==='unverified').length}
-  };
+  const counts={likely:[...byId.values()].filter(a=>a.state==='likely').length,
+    restricted:[...byId.values()].filter(a=>a.state==='restricted').length,
+    unverified:[...byId.values()].filter(a=>a.state==='unverified').length};
+  // Fail CLOSED for Corsair ID. Unknown standing is NOT docking permission.
+  // An explicit opt-in may include unverified candidates but never known denials.
+  const blocked=corsairEnabled?[...byId].filter(([,a])=>
+    a.state==='restricted'||(!includeUnverified&&a.state==='unverified')).map(([id])=>id):[];
+  return {byId,indexReady:index.ready,blocked,counts,includeUnverified:Boolean(includeUnverified),
+    filteredUnknown:corsairEnabled&&!includeUnverified?counts.unverified:0};
 }
 export function setLaneSpeed(navigation,speed=LANE_SPEED){
   if(!navigation||!Array.isArray(navigation.links))throw Error('Navigation data missing.');

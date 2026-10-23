@@ -41,6 +41,7 @@
                 <label class="dtr-routes-check"><input id="dtrRoutesMixed" type="checkbox" checked> <span>OPTIMIZE MIXED CARGO ON SAME FLIGHT</span></label>
                 <label class="dtr-routes-check"><input id="dtrRoutesEmpty" type="checkbox"> <span>ALLOW EMPTY RETURN FLIGHT</span></label>
                 <label class="dtr-routes-check"><input id="dtrRoutesUnknown" type="checkbox"> <span>ALLOW ROUTES WITH UNKNOWN FLIGHT TIME</span></label>
+                <label class="dtr-routes-check dtr-routes-unsafe"><input id="dtrRoutesUnverified" type="checkbox"> <span>INCLUDE UNVERIFIED DOCKS (AT YOUR OWN RISK)<small>OFF BY DEFAULT // PRIVATE POBS MAY REQUIRE WHITELIST // KNOWN NO-DOCK BASES STAY BLOCKED</small></span></label>
                 <label class="dtr-routes-field"><span>SEARCH DEPTH</span><select id="dtrRoutesDepth"><option value="18">STANDARD</option><option value="45">EXTENDED</option></select></label>
               </div>
             </details>
@@ -50,11 +51,11 @@
               <button type="button" id="dtrRoutesCancel" hidden>ABORT SEARCH</button>
               <button type="button" id="dtrRoutesRefresh">FORCE MARKET UPLINK</button>
             </div>
-            <p class="dtr-routes-access-note" id="dtrRoutesAccessNote">Corsair docking is a prediction from public faction relations. Private POB access and your personal reputation cannot be verified.</p>
+            <p class="dtr-routes-access-note" id="dtrRoutesAccessNote">Corsair ON uses strict docking: known hostile and unverified bases are excluded. Unknown docks may be opted into, but personal reputation and private POB rules remain unverified.</p>
           </form>
         </section>
         <section class="dtr-routes-results" aria-label="Trade route search results">
-          <header><div><small>02 // TRADE INTELLIGENCE</small><strong>VERIFIED OPPORTUNITIES</strong></div>
+          <header><div><small>02 // TRADE INTELLIGENCE</small><strong>TRADE CANDIDATES</strong></div>
             <label>RANK BY <select id="dtrRoutesSort"><option value="hourly">$ / HOUR</option><option value="profit">TOTAL PROFIT</option></select></label>
           </header>
           <div class="dtr-routes-source" id="dtrRoutesSource">AWAITING DISCOVERY MARKETS</div>

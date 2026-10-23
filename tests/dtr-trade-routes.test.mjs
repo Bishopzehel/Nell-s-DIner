@@ -33,6 +33,12 @@ assert(route.includes("readJson('npc_bases',{},controller.signal)"),'NPC base en
 assert(route.includes("readJson('factions',{include_reputations:true"),'Corsair relations must be explicitly requested from Darkstat');
 assert(route.includes("markResultsStale()"),'changing a profile or filter must invalidate outdated trade results');
 assert(route.includes("assessAccess(dataset.bases"),'Corsair access profile must actually affect search');
+assert(partial.includes('id="dtrRoutesUnverified"')&&!partial.includes('id="dtrRoutesUnverified" checked'),
+  'include unknown docking must require explicit consent');
+assert(route.includes('includeUnverified:'),'ID dock override must be wired into route assessment');
+assert(route.includes('access?.blocked.includes(origin.id)'),'starting bases must be checked with the full blocked set');
+assert(route.includes('access?.blocked.includes(b.id)'),'the base picker must not offer prohibited starting bases');
+assert(!partial.includes('VERIFIED OPPORTUNITIES'),'route candidates must not be falsely described as guaranteed docking');
 assert(route.includes("blocked:$('dtrRoutesCorsair').checked?block:[]"),'reputation filter must be disableable');
 assert(route.includes('returnScope:'),'return mode must be user-changeable');
 assert(route.includes('groupRoutes('),'route variants must be grouped, not dumped as a giant list');
@@ -74,7 +80,8 @@ assert(routeResults.results[0].legs[0].source==='crete','Crete travel approach m
 const groups=groupRoutes(routeResults.results,new Map(testBases.map(b=>[b.id,b])));
 assert(groups.length>0);
 const access=assessAccess(testBases,true,[]);
-assert.equal(access.blocked.length,0,'unverified faction data must not invent hostile stations');
+assert.deepEqual(Array.from(access.blocked),['crete','shop','buyer'],
+  'missing faction data must exclude unknown docking candidates by default');
 const transportNav=new Navigator(sampleNav,testBases,PROFILES[0]);
 assert(transportNav.route('crete','shop').seconds>0,'navigator must count approach to first trade');
 console.log('DTR Trade Routes runtime test passed (navigation, full graph, 2500 lanes, Crete approach, UI, worker and cargo classes).');

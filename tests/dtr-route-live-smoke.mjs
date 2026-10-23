@@ -25,6 +25,15 @@ else{
   const candidates=ds.bases.filter(x=>/crete/i.test(x.name||'')).map(x=>({id:x.id,name:x.name,system:x.systemName,kind:x.kind}));
   const origin=findPlanetCrete(ds.bases);
   const ac=assessAccess(ds.bases,true,factions.status==='fulfilled'?factions.value:[]);
+  const manhattanBases=ds.bases.filter(b=>/planet manhattan/i.test(b.name));
+  const manhattanAudit=manhattanBases.map(b=>({
+    id:b.id,name:b.name,owner:b.factionName,docking:ac.byId.get(b.id),excluded:ac.blocked.includes(b.id)
+  }));
+  console.log('DTR DOCK STRICT MANHATTAN '+JSON.stringify(manhattanAudit));
+  if(!manhattanAudit.length||manhattanAudit.some(b=>b.docking?.state!=='restricted'||!b.excluded)){
+    console.error('Manhattan docking aliases not completely restricted for Corsairs');
+    process.exitCode=1;
+  }
   const corsair=factions.status==='fulfilled'?factions.value.find(f=>f.nickname==='fc_c_grp'):null;
   console.log('DTR TRADE LIVE DATA '+JSON.stringify({
     marketBases:ds.bases.length,creteCandidates:candidates.slice(0,12),
@@ -50,6 +59,12 @@ else{
         breadth:18,searchMs:12000,mixedMs:3500,maxChecks:8000,
         timeModel:{dock:30,jump:15,lane:10,charge:5}};
       const found=await search(ds,nav,profile,options);
+      const violation=found.results.flatMap(r=>r.legs.flatMap(l=>[l.source,l.target]))
+        .filter(id=>ac.byId.get(id)?.state!=='likely');
+      if(violation.length){
+        console.error('CORSAIR STRICT ROUTES CONTAIN UNVERIFIED OR RESTRICTED DOCKING',violation.slice(0,12));
+        process.exitCode=1;
+      }
       console.log('DTR TRADE DEFAULT SEARCH '+JSON.stringify({
         count:found.results.length,stats:found.stats,
         top:found.results.slice(0,3).map(r=>({

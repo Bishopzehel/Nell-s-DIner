@@ -77,6 +77,9 @@
 .dtr-routes-wide{grid-column:1/-1}
 .dtr-routes-check{display:flex;gap:10px;align-items:center;grid-column:1/-1;color:#c9bcc4;font:.72rem "Oxanium",sans-serif;min-height:42px;cursor:pointer}
 .dtr-routes-check input{width:19px;height:19px;accent-color:var(--red-bright)}
+.dtr-routes-unsafe{align-items:flex-start;padding:10px;border:1px solid rgba(210,167,103,.35);background:rgba(210,167,103,.045)}
+.dtr-routes-unsafe>span{display:grid;gap:6px;color:var(--warn)}
+.dtr-routes-unsafe small{display:block;font:400 .68rem/1.45 "Manrope",sans-serif;color:#b8a29a}
 .dtr-routes-config{margin:0;color:#a1909d;font:.68rem/1.6 "Oxanium",sans-serif;letter-spacing:.015em;overflow-wrap:anywhere}
 .dtr-routes-actions{display:grid;gap:8px}
 .dtr-routes-actions button{cursor:pointer;min-height:47px;padding:10px;border:1px solid rgba(189,70,82,.35);background:#100a0d;color:var(--rose);font:700 .75rem "Oxanium",sans-serif}
@@ -121,6 +124,8 @@
 .dtr-routes-picker-list button{text-align:left;display:grid;gap:3px;color:#e1d9de}
 .dtr-routes-picker-list button small{color:#9f929a}
 .dtr-routes-picker-list button[data-access="restricted"]{color:var(--bad)}
+.dtr-routes-picker-list button:disabled{opacity:.5;cursor:not-allowed;border-color:rgba(220,95,104,.29)}
+.dtr-routes-picker-list button[data-access="unverified"]:disabled{color:var(--warn)}
 .dtr-routes-picker-list p{color:#9a8c95;font:.78rem "Manrope",sans-serif}
 .dtr-routes-detail{max-width:min(780px,calc(100% - 24px))}
 #dtrRoutesDetailBody{padding:17px}

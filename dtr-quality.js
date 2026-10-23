@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '1.0.0', build: '2026.10.23-TRADE-A' });
+  const META = Object.freeze({ version: '1.0.1', build: '2026.10.23-DOCK-A' });
   const ATTENTION_KEY = 'dtr:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
