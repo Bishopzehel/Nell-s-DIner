@@ -33,3 +33,17 @@ else{
   }));
   if(!origin){console.error('PLANET CRETE DEFAULT NOT RESOLVED FROM LIVE FEED');process.exitCode=1;}
 }
+
+const params=[
+ ['npc_bases',{}],['npc_bases',{filter_to_useful:true}],
+ ['factions',{}],['factions',{include_reputations:true,filter_to_useful:false}],
+ ['factions',{include_reputations:true,include_bribes:false,filter_to_useful:true}]
+];
+const checks=await Promise.all(params.map(async ([path,body])=>{
+  try{
+    const items=await read(path,body);
+    return {path,body,ok:true,count:Array.isArray(items)?items.length:'not-array',
+      example:Array.isArray(items)&&items[0]?Object.keys(items[0]).slice(0,20):[]};
+  }catch(e){return {path,body,ok:false,error:String(e)}}
+}));
+console.log('DTR TRADE REQUEST BODY PROBES '+JSON.stringify(checks));
