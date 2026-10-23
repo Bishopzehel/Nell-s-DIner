@@ -21,8 +21,10 @@ assert(partial.includes('id="dtrRoutesPobs"')&&!partial.includes('id="dtrRoutesP
 assert(partial.includes('id="dtrRoutesCorsair" checked'),'Corsair profile must default ON');
 assert(partial.includes('PLANET CRETE'),'planet Crete must be the selected default');
 assert(partial.includes('dtrRoutesStartPicker'),'starting base must remain selectable');
-assert(partial.includes('3,600')&&partial.includes('4,300')&&partial.includes('5,000'),'all cargo classes must be displayed');
-assert(partial.includes('500 M/S CRUISE')&&partial.includes('410 M/S CRUISE')&&partial.includes('350 M/S CRUISE'),'all cargo cruise profiles displayed');
+assert(partial.includes('dtrRoutesFavorites')&&partial.includes('dtrRoutesShipDialog'),'the new UI must expose favorites and searchable ships');
+assert(partial.includes('id="dtrRoutesCustomForm"')&&partial.includes('dtrRoutesCustomDock'),'custom profiles must edit cargo/cruise/docking');
+assert(partial.includes('dtrRoutesShipMaxCargo')&&partial.includes('dtrRoutesShipCruise')&&partial.includes('dtrRoutesShipDocking'),'live ship metrics must be visible');
+assert(!partial.includes('data-dtr-cargo="freighter-'),'deprecated generic cargo classes must be replaced');
 assert(!partial.includes('WAYPOINT'),'DTR route workspace must not reuse WAYPOINT branding');
 assert(css.includes('var(--red-bright)')&&css.includes('var(--gold)'),'routes should use established DTR palette');
 assert(css.includes('flex:0 0 auto'),'mobile telemetry must drop original 330px flex basis');
@@ -39,7 +41,10 @@ assert(route.includes('includeUnverified:'),'ID dock override must be wired into
 assert(route.includes('access?.blocked.includes(origin.id)'),'starting bases must be checked with the full blocked set');
 assert(route.includes('access?.blocked.includes(b.id)'),'the base picker must not offer prohibited starting bases');
 assert(!partial.includes('VERIFIED OPPORTUNITIES'),'route candidates must not be falsely described as guaranteed docking');
-assert(route.includes("blocked:$('dtrRoutesCorsair').checked?block:[]"),'reputation filter must be disableable');
+assert(route.includes("...($('dtrRoutesCorsair').checked?block:[])"),'Corsair filter must remain disableable');
+assert(route.includes('blockedShipDocks(dataset.bases,profile,navigation)'),'known incompatible ship docks must be excluded');
+assert(route.includes("dockEligibility(origin.id,profile,navigation)==='blocked'"),'origin must obey selected ship docking class');
+assert(route.includes('shipController.mount()'),'ship selector should activate with the DTR workspace');
 assert(route.includes('returnScope:'),'return mode must be user-changeable');
 assert(route.includes('groupRoutes('),'route variants must be grouped, not dumped as a giant list');
 assert(worker.includes('optimizeTour'),'original WAYPOINT engine must be the calculation core');

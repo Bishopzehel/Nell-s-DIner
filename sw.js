@@ -1,11 +1,12 @@
 /* DTR POB Network · RHW-style offline app shell.
    App assets are available offline. Darkstat telemetry remains network-only. */
 const CACHE_PREFIX='dtr-pob-network-pwa-';
-const CACHE_NAME=`${CACHE_PREFIX}2026-10-23-v1.0.1-dock-filter-1`;
+const CACHE_NAME=`${CACHE_PREFIX}2026-10-23-v1.0.2-ship-picker-1`;
 const APP_SHELL=[
-  './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-calculator.css','./dtr-production.css','./dtr-shipyard.css','./dtr-calculator-mobile.css','./dtr-forum.css','./dtr-trade-routes.css',
+  './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-calculator.css','./dtr-production.css','./dtr-shipyard.css','./dtr-calculator-mobile.css','./dtr-forum.css','./dtr-trade-routes.css','./dtr-ships.css',
   './dtr-pwa.js','./recipe-catalog.js','./app.js','./dtr-procurement-prices.js','./dtr-calculator.js','./dtr-production.js','./dtr-shipyard.js','./dtr-forum.js','./dtr-quality.js','./dtr-uplink.js',
   './dtr-trade-panel.html','./dtr-trade-routes.mjs','./dtr-route-policy.mjs',
+  './dtr-ship-profiles.mjs','./dtr-ship-controller.mjs',
   './trade-core/trade.mjs','./trade-core/cargo.mjs','./trade-core/navigation.mjs',
   './trade-core/search.mjs','./trade-core/ranking.mjs','./trade-core/variants.mjs',
   './trade-core/worker.mjs','./trade-core/vendor/lp-solver.mjs','./trade-core/vendor/LP-SOLVER-LICENSE.txt',

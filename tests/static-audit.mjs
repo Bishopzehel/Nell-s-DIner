@@ -82,6 +82,13 @@ assert.match(routePolicy, /!includeUnverified&&a\.state==='unverified'/, 'Corsai
 assert.match(await read('dtr-trade-panel.html'), /id="dtrRoutesUnverified"/, 'Advanced Search must offer explicit risky docking opt-in');
 assert.match(await read('dtr-trade-routes.mjs'), /access\?\.blocked\.includes\(origin\.id\)/, 'starting station must obey the strict Corsair dock filter');
 assert(sw.includes('./trade-core/data/navigation.json.gz'), 'navigation graph must be cached for installed DTR');
+assert(sw.includes('./dtr-ship-profiles.mjs')&&sw.includes('./dtr-ship-controller.mjs')&&sw.includes('./dtr-ships.css'),'ship selector modules and styles must be available offline');
+assert(html.includes('./dtr-ships.css'),'ship profile styling must load in the DTR workspace');
+const shipsView=await read('dtr-trade-panel.html');
+assert.match(shipsView,/id="dtrRoutesShipDialog"/,'ship search must have its own dialog');
+assert.match(shipsView,/id="dtrRoutesCustomForm"/,'manual ship profiles must remain available');
+assert.match(shipsView,/id="dtrRoutesFavorites"/,'quick-favorite ships must be available');
+assert.match(shipsView,/form="dtrRoutesForm"[^>]*id="dtrRoutesCargo"|id="dtrRoutesCargo"[^>]*form="dtrRoutesForm"/,'available cargo outside advanced filters must participate in route form validation');
 assert(app.includes("'trade-routes'"), 'Trade Routes must be a first-class app route');
 assert(quality.includes("short: 'ROUTES'"), 'mobile section navigation must include Trade Routes');
 assert(!html.includes('data-view="forja-del-vacio"'), 'retired Forja must remain removed');
@@ -216,8 +223,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'1\.0\.1'/, 'visible build version must match v1.0.1');
-assert.match(sw, /v1\.0\.1/, 'service-worker cache must match v1.0.1');
+assert.match(quality, /version:\s*'1\.0\.2'/, 'visible build version must match v1.0.1');
+assert.match(sw, /v1\.0\.2/, 'service-worker cache must match v1.0.1');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');
 assert(sw.includes('./dtr-production.js'), 'production runtime must be available offline');

@@ -39,11 +39,13 @@ jobs:
         run: node tests/procurement-runtime.mjs
       - name: Check native trade route modules
         run: |
-          for file in dtr-trade-routes.mjs dtr-route-policy.mjs trade-core/*.mjs trade-core/vendor/lp-solver.mjs; do node --check "$file"; done
+          for file in dtr-trade-routes.mjs dtr-route-policy.mjs dtr-ship-profiles.mjs dtr-ship-controller.mjs trade-core/*.mjs trade-core/vendor/lp-solver.mjs; do node --check "$file"; done
       - name: Run route policy audit
         run: node tests/dtr-route-policy.test.mjs
       - name: Run trade routes runtime audit
         run: node tests/dtr-trade-routes.test.mjs
+      - name: Run ship profiles audit
+        run: node tests/dtr-ships.test.mjs
       - name: Probe live Darkstat trade data
         continue-on-error: true
         run: node tests/dtr-route-live-smoke.mjs

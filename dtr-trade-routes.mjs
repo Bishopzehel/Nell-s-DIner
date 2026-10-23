@@ -1,5 +1,7 @@
 /* DTR // Trade Routes · independent workspace with reused Discovery route calculation engine. */
-import { PROFILES, normalizeDarkstat } from './trade-core/trade.mjs';
+import { normalizeDarkstat } from './trade-core/trade.mjs';
+import { DEFAULT_SHIP_ID,FALLBACK_SHIPS,verifyShipProfile,blockedShipDocks,dockEligibility } from './dtr-ship-profiles.mjs';
+import { createShipController } from './dtr-ship-controller.mjs';
 import { validateNavigation } from './trade-core/navigation.mjs';
 import { groupRoutes } from './trade-core/variants.mjs';
 import { findPlanetCrete, enrichBaseOwners, assessAccess, setLaneSpeed, LANE_SPEED } from './dtr-route-policy.mjs';
@@ -14,7 +16,7 @@ const STORAGE_KEY='dtr:trade-routes:settings:v1';
 const DB_NAME='dtr-trade-market-cache-v1';
 const API='https://darkstat.dd84ai.com/api';
 let started=false,busy=false,dataset=null,navigation=null,factions=[],npcBases=[],pobSource=[];
-let dataMode='none',profile=PROFILES.find(p=>p.cargo===5000)||PROFILES[0],routeMode='auto';
+let dataMode='none',profile=FALLBACK_SHIPS.find(ship=>ship.id===DEFAULT_SHIP_ID),routeMode='auto';
 let startId='',startPreferredId='',startTouched=false,worker=null,results=[],lastStats=null,activeOptions=null;
 let access=null,requests=0,detailIndex=-1,loadedAt=0,pickerTimer=0;
 const availableRoutes=()=>window.DTRApp?.getState?.()?.view==='trade-routes';
@@ -26,7 +28,15 @@ const settings=readPreferences();
 startPreferredId=typeof settings.startId==='string'?settings.startId:'';
 startTouched=Boolean(settings.startTouched);
 routeMode=['one','auto','two','three'].includes(settings.mode)?settings.mode:'auto';
-profile=PROFILES.find(p=>p.id===settings.profile)||profile;
+const shipController=createShipController({
+  readJson,legacySettings:settings,
+  onChange(next){
+    profile=next;
+    markResultsStale();
+    refreshControls();
+  }
+});
+profile=shipController.getCurrent();
 function savePreferences(){
   const obj={
     profile:profile.id,startId,startTouched,mode:routeMode,
@@ -56,10 +66,6 @@ function restorePreferences(){
     ['dtrRoutesUnknown','unknown',false],['dtrRoutesUnverified','includeUnverified',false]]){
     $(id).checked=typeof saved[key]==='boolean'?saved[key]:defaultValue;
   }
-  $('dtrRoutesCargo').value=profile.cargo;
-  document.querySelectorAll('#tradeRoutesView [data-dtr-cargo]').forEach(b=>{
-    b.setAttribute('aria-pressed',String(b.dataset.dtrCargo===profile.id));
-  });
   document.querySelectorAll('#tradeRoutesView input[name="dtrRoutesMode"]').forEach(input=>{
     input.checked=input.value===(routeMode==='one'?'one':'auto');
   });
@@ -78,7 +84,8 @@ function refreshControls(){
   $('dtrRoutesCancel').hidden=!busy;
   $('dtrRoutesProgress').hidden=!busy;
   $('dtrRoutesSettingsSummary').textContent=[
-    qty(profile.cargo)+' MAX CARGO',profile.cruise+' CRUISE',
+    profile.name.toUpperCase(),qty(profile.cargo)+' MAX CARGO',profile.cruise+' CRUISE',
+    profile.dockLabel+' DOCK',
     $('dtrRoutesPobs').checked?'POBS ON':'POBS OFF',
     $('dtrRoutesCorsair').checked?'CORSAIR ON':'CORSAIR OFF',
     $('dtrRoutesCorsair').checked?$('dtrRoutesUnverified').checked?'UNVERIFIED DOCKS OPT-IN':'STRICT DOCK FILTER':'DOCKING NOT VERIFIED',
@@ -114,16 +121,6 @@ function syncAccess(){
   const origin=selectedOrigin();
   if(origin&&$('dtrRoutesCorsair').checked&&access.blocked.includes(origin.id))
     notice('This start base is restricted or unverified for Corsairs. Choose another base, turn Corsair OFF, or deliberately enable unverified docking in Advanced Search. Known denied bases stay blocked.','warn');
-}
-function setProfile(id){
-  const found=PROFILES.find(p=>p.id===id);
-  if(!found)return;
-  profile=found;
-  $('dtrRoutesCargo').max=found.cargo;
-  $('dtrRoutesCargo').value=found.cargo;
-  document.querySelectorAll('#tradeRoutesView [data-dtr-cargo]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.dtrCargo===id)));
-  markResultsStale();
-  refreshControls();savePreferences();
 }
 function setRouteMode(mode){
   routeMode=['one','auto','two','three'].includes(mode)?mode:'auto';
@@ -219,24 +216,28 @@ function renderSource(){
 }
 function readParams(){
   if(!isReady())throw Error('Wait for the live market and navigation map.');
+  if(!verifyShipProfile(profile))throw Error('Select a valid ship profile with cargo, cruise speed and docking class.');
   if(!$('dtrRoutesForm').reportValidity())throw Error('Check input fields.');
   const origin=selectedOrigin();
   if(!origin)throw Error('Please select a valid starting base. Crete may be unavailable in this market snapshot.');
   if(!$('dtrRoutesPobs').checked&&origin.kind==='pob')throw Error('To start at a POB, enable INCLUDE POBs.');
   if($('dtrRoutesCorsair').checked&&access?.blocked.includes(origin.id))
     throw Error('Starting base is excluded by the Corsair dock filter. Known restrictions always stay blocked. Unverified docks require explicit opt-in in Advanced Search.');
+  if(dockEligibility(origin.id,profile,navigation)==='blocked')
+    throw Error('Selected ship cannot physically dock at the starting base. Choose another ship or start location.');
   const cargo=Number($('dtrRoutesCargo').value);
   if(!(cargo>0&&cargo<=profile.cargo))throw Error('Cargo volume exceeds selected cargo class.');
   const capital=Number($('dtrRoutesCapital').value);
   if(!(capital>=0))throw Error('Trading capital must not be negative.');
   const mode=routeMode==='one'?'one':$('dtrRoutesLegs').value;
   const block=access?.blocked||[];
+  const shipBlocked=blockedShipDocks(dataset.bases,profile,navigation);
   if($('dtrRoutesCorsair').checked&&!access?.indexReady&&!$('dtrRoutesUnverified').checked)
     throw Error('Corsair faction data unavailable. Strict screening blocks unknown stations. Try FORCE MARKET UPLINK or deliberately opt in to unverified docks.');
   return {
     mode,start:origin.id,cargo,capital,
     excludePobs:!$('dtrRoutesPobs').checked,
-    blocked:$('dtrRoutesCorsair').checked?block:[],
+    blocked:[...new Set([...($('dtrRoutesCorsair').checked?block:[]),...shipBlocked])],
     allowUnknownTime:$('dtrRoutesUnknown').checked,
     returnScope:$('dtrRoutesReturn').value,returnSystem:'',
     flexiblePickups:true,allowEmptyReturn:$('dtrRoutesEmpty').checked,
@@ -269,6 +270,12 @@ function searchWorker(){
   return worker;
 }
 function markResultsStale(){
+  if(busy){
+    worker?.postMessage({type:'cancel'});
+    requests++;busy=false;
+    status('FLIGHT PROFILE CHANGED // RECALCULATE','warn');
+    refreshControls();
+  }
   if(!results.length&&!lastStats)return;
   results=[];lastStats=null;
   renderResults();
@@ -394,10 +401,12 @@ function renderPicker(query){
   const matches=filtered.slice(0,55);
   $('dtrRoutesPickerList').innerHTML=matches.length?matches.map(b=>{
     const ac=access?.byId.get(b.id);
-    const denied=$('dtrRoutesCorsair').checked&&access?.blocked.includes(b.id);
+    const shipDock=dockEligibility(b.id,profile,navigation);
+    const denied=($('dtrRoutesCorsair').checked&&access?.blocked.includes(b.id))||shipDock==='blocked';
     return '<button type="button" data-route-start-id="'+escape(b.id)+'" data-access="'+escape(ac?.state||'unverified')+'"'+
-      (denied?' disabled title="Unavailable under current Corsair dock filter"':'')+'><strong>'+escape(b.name)+'</strong>'+
-      '<small>'+escape(b.systemName||b.system||'')+' // '+(b.kind==='pob'?'POB':'NPC')+' // '+escape(ac?.state?.toUpperCase()||'UNVERIFIED')+'</small></button>';
+      (denied?' disabled title="Unavailable due to ID or selected ship docking restrictions"':'')+'><strong>'+escape(b.name)+'</strong>'+
+      '<small>'+escape(b.systemName||b.system||'')+' // '+(b.kind==='pob'?'POB':'NPC')+' // '+
+       escape(ac?.state?.toUpperCase()||'UNVERIFIED')+' // '+escape(shipDock==='blocked'?'SHIP DOCK DENIED':shipDock==='allowed'?'SHIP DOCK COMPATIBLE':'SHIP DOCK UNVERIFIED')+'</small></button>';
   }).join('')+'<p>'+qty(filtered.length)+' MATCHES'+(filtered.length>55?' // TYPE MORE TO FILTER':'')+'</p>':
     '<p>NO BASE MATCHES. TRY A SYSTEM OR SHORTER SEARCH TERM.</p>';
 }
@@ -405,6 +414,9 @@ function selectOrigin(id){
   const base=dataset?.bases.find(b=>b.id===id);if(!base)return;
   if($('dtrRoutesCorsair').checked&&access?.blocked.includes(base.id)){
     notice('This base is excluded by the current Corsair dock filter. Change ID or explicitly include unverified docks, but known no-dock remains blocked.','warn');return;
+  }
+  if(dockEligibility(base.id,profile,navigation)==='blocked'){
+    notice('The selected ship cannot physically dock at that base. Try another ship or start location.','warn');return;
   }
   startId=base.id;startPreferredId=id;startTouched=true;
   applyOrigin();syncAccess();markResultsStale();refreshControls();savePreferences();
@@ -423,8 +435,6 @@ function bind(){
   $('dtrRoutesCancel').addEventListener('click',abortSearch);
   $('dtrRoutesSort').addEventListener('change',()=>{savePreferences();renderResults();});
   $('tradeRoutesView').addEventListener('click',e=>{
-    const cargo=e.target.closest('[data-dtr-cargo]');
-    if(cargo){setProfile(cargo.dataset.dtrCargo);return;}
     const opt=e.target.closest('[data-route-start-id]');
     if(opt){selectOrigin(opt.dataset.routeStartId);return;}
     const details=e.target.closest('[data-dtr-route-detail]');
@@ -432,7 +442,7 @@ function bind(){
     const more=e.target.closest('[data-dtr-route-more]');
     if(more){showMore(Number(more.dataset.dtrRouteMore),more);return;}
     const close=e.target.closest('[data-route-close]');
-    if(close)closeDialog(close.dataset.routeClose);
+    if(close&&close.dataset.routeClose!=='dtrRoutesShipDialog')closeDialog(close.dataset.routeClose);
   });
   $('tradeRoutesView').addEventListener('change',e=>{
     if(e.target.name==='dtrRoutesMode'){setRouteMode(e.target.value);return;}
@@ -441,7 +451,11 @@ function bind(){
     markResultsStale();
     refreshControls();savePreferences();
   });
-  $('tradeRoutesView').addEventListener('input',e=>{if(e.target.id==='dtrRoutesPickerSearch')return;refreshControls();});
+  $('tradeRoutesView').addEventListener('input',e=>{
+    if(e.target.id==='dtrRoutesPickerSearch'||e.target.id==='dtrRoutesShipSearch')return;
+    if(e.target.id==='dtrRoutesCargo')markResultsStale();
+    refreshControls();
+  });
   for(const id of ['dtrRoutesPickerDialog','dtrRoutesDetailDialog']){
     $(id).addEventListener('close',()=>document.body.classList.remove('modal-open'));
   }
@@ -466,6 +480,7 @@ async function bootstrap(){
     return;
   }
   bind();
+  shipController.mount();
   renderSource();
   status('LOADING ROUTE MAP','warn');
   // Cache can improve cold start; cached trading prices always retain their timestamp.
@@ -492,6 +507,8 @@ document.addEventListener('visibilitychange',()=>{
 window.DTRTradeRoutes=Object.freeze({
   bootstrap,marketRefresh,runSearch,getState:()=>({
     started,busy,mode:routeMode,startId,profile:profile.id,
+    ship:{name:profile.name,cargo:profile.cargo,cruise:profile.cruise,dock:profile.dockLabel},
+    ships:shipController.getRegistryStatus(),favorites:shipController.getFavorites(),
     corsair:$('dtrRoutesCorsair')?.checked,pobs:$('dtrRoutesPobs')?.checked,
     includeUnverified:$('dtrRoutesUnverified')?.checked,blockedByDockPolicy:access?.blocked.length??0,
     marketMode:dataMode,navigationReady:Boolean(navigation),resultCount:results.length,
