@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./dtr-shipyard.css">
   <link rel="stylesheet" href="./dtr-calculator-mobile.css">
   <link rel="stylesheet" href="./dtr-forum.css">
+  <link rel="stylesheet" href="./dtr-trade-routes.css">
 </head>
 <body>
   <div class="ambient-grid" aria-hidden="true"></div>
@@ -58,13 +59,17 @@
 
   <div class="transmission-rail" aria-hidden="true"><span>NETWORK STATUS RECEIVED</span></div>
 
-  <nav class="tabs" id="tabs" aria-label="DTR workspace navigation">
-    <button class="tab active" type="button" data-view="overview"><span>00</span>ALL NODES</button>
-    <button class="tab" type="button" data-view="deterrence-sanctum"><span>01</span>SANCTUM</button>
-    <button class="tab" type="button" data-view="ravenna-invicta"><span>02</span>INVICTA</button>
-    <button class="tab" type="button" data-view="fort-torrelavega"><span>03</span>TORRELAVEGA</button>
+  <nav class="tabs" id="tabs" aria-label="DTR main sections">
+    <button class="tab active" type="button" data-view="overview"><span>01</span>POB NETWORK</button>
+    <button class="tab" type="button" data-view="trade-routes"><span>02</span>TRADE ROUTES</button>
+    <button class="tab" type="button" data-view="forum"><span>03</span>FORUM</button>
     <button class="tab" type="button" data-view="calculator"><span>04</span>CALCULATOR</button>
-    <button class="tab" type="button" data-view="forum"><span>05</span>FORUM</button>
+  </nav>
+  <nav class="dtr-pob-subtabs" id="pobTabs" aria-label="POB network views">
+    <button class="pob-tab active" type="button" data-view="overview"><span>00</span>OVERVIEW</button>
+    <button class="pob-tab" type="button" data-view="deterrence-sanctum"><span>01</span>SANCTUM</button>
+    <button class="pob-tab" type="button" data-view="ravenna-invicta"><span>02</span>INVICTA</button>
+    <button class="pob-tab" type="button" data-view="fort-torrelavega"><span>03</span>TORRELAVEGA</button>
   </nav>
 
   <main class="command-frame">
@@ -103,6 +108,11 @@
         </div>
         <div class="matrix-wrap" id="networkMatrix"></div>
       </section>
+    </section>
+
+    <section id="tradeRoutesView" class="view dtr-routes-view" hidden>
+      <div class="dtr-routes-hero"><div><p class="section-kicker">DTR TRADE INTELLIGENCE</p>
+        <h2>Trade Routes</h2><p>LOADING TRADE ROUTE PLANNER...</p></div></div>
     </section>
 
     <section id="calculatorView" class="view calculator-view" hidden>
@@ -297,5 +307,6 @@
   <script src="./dtr-forum.js"></script>
   <script src="./dtr-quality.js"></script>
   <script src="./dtr-uplink.js"></script>
+  <script type="module" src="./dtr-trade-routes.mjs"></script>
 </body>
 </html>

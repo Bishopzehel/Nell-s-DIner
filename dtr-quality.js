@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '0.9.1', build: '2026.10.16-E' });
+  const META = Object.freeze({ version: '1.0.0', build: '2026.10.23-TRADE-A' });
   const ATTENTION_KEY = 'dtr:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
@@ -66,16 +66,11 @@
   }
 
   function mobilePobs() {
-    const configured = window.DTRApp?.POBS || [];
     return [
-      { view: 'overview', index: '00', short: 'ALL', label: 'All POB nodes' },
-      ...configured.map((pob, index) => ({
-        view: pob.key,
-        index: `0${index + 1}`,
-        short: pob.key === 'fort-torrelavega' ? 'TORRE' : pob.short,
-        label: pob.label
-      })),
-      { view: 'forum', index: String(configured.length + 2).padStart(2, '0'), short: 'FORUM', label: 'Forum transmission composer' }
+      { view: 'overview', index: '01', short: 'POBS', label: 'POB Network / Overview' },
+      { view: 'trade-routes', index: '02', short: 'ROUTES', label: 'Trade Routes' },
+      { view: 'forum', index: '03', short: 'FORUM', label: 'Forum Transmission Composer' },
+      { view: 'calculator', index: '04', short: 'CALC', label: 'Recipe Cost Calculator' }
     ];
   }
 
@@ -93,7 +88,8 @@
   function syncMobileNav() {
     const active = appState().view || 'overview';
     document.querySelectorAll('#dtrMobileNav [data-mobile-view]').forEach(button => {
-      const selected = button.dataset.mobileView === active;
+      const isPob = active === 'overview' || (window.DTRApp?.POBS || []).some(pob => pob.key === active);
+      const selected = button.dataset.mobileView === (isPob ? 'overview' : active);
       button.classList.toggle('active', selected);
       if (selected) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
@@ -174,7 +170,7 @@
     const storageReady = window.DTRApp?.storageCheck?.() ?? false;
     const storageFaults = state.storageFaults?.length || 0;
     const recoveries = state.recoveries?.length || 0;
-    const requiredShell = ['tabs', 'overviewView', 'calculatorView', 'forumView', 'detailView', 'shipyardPanel', 'overviewGrid', 'networkMatrix', 'systemPanel']
+    const requiredShell = ['tabs', 'pobTabs', 'overviewView', 'tradeRoutesView', 'calculatorView', 'forumView', 'detailView', 'shipyardPanel', 'overviewGrid', 'networkMatrix', 'systemPanel']
       .every(id => Boolean($(id)));
     const runtimeReady = Boolean(window.DTRApp) && Boolean(window.DTRForum) && requiredShell && runtimeEvents.length === 0;
     const matches = [...(state.bases?.values?.() || [])].filter(Boolean).length;

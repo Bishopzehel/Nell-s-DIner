@@ -1,6 +1,6 @@
 # DTR POB Network
 
-Mobile-first operational dashboard for the DTR faction's three active player-owned bases. It combines Darkstat telemetry, facility maintenance reserves, POB-specific pinned cargo, inventory quotations, recipe costing, production capacity and offline snapshot support in one installable web app.
+Mobile-first DTR command dashboard with four main sections: POB NETWORK (Overview, Sanctum, Invicta and Torrelavega), TRADE ROUTES, FORUM and CALCULATOR. The three POBs remain separate detail views under their own section. It combines Darkstat telemetry, facility maintenance reserves, POB-specific pinned cargo, inventory quotations, recipe costing, production capacity and offline snapshot support in one installable web app.
 
 ## Runtime
 
@@ -36,6 +36,19 @@ Mobile-first operational dashboard for the DTR faction's three active player-own
 - The quote summary shows pricing completeness as plain status text and only displays a recipe-fee card when the selected recipe actually charges one.
 - Explicitly reported stock shortages are shown separately from pricing completeness. Catalysts are listed as retained requirements and are not added to consumed-material cost.
 
+## Trade Routes (first DTR preview, v1.0.0)
+
+The Trade Routes workspace reuses the existing independent WAYPOINT route-search core as copied, self-contained `trade-core/` modules, with the original LP solver license bundled. **WAYPOINT stays a separate repository and is not modified.** The workspace has DTR's crimson/gold branding, a four-section desktop/mobile navigation, and a separate POB view switcher.
+
+- **Starting base:** Planet Crete in Omicron Gamma is the default if uniquely present in the live market. The start picker can select any other reported NPC/POB base. A missing or ambiguous Crete mapping is shown as a warning, never silently replaced.
+- **Cargo class:** 3,600 volume / 500 m/s Cruise, 4,300 / 410, or 5,000 / 350. The selected volume remains adjustable downward; all three share the medium docking model. Loaded WAYPOINT trade lanes are intentionally normalized to **2,500 m/s** in DTR only, per the new DTR trade profile; this does not change the WAYPOINT site.
+- **POBs OFF** and **Corsair ID ON** on a fresh device, independently switchable. Other-faction players can disable Corsair filtering, but this does not magically infer their personal reputation.
+- The optional Corsair docking predictor queries public Darkstat `/api/factions` and `/api/npc_bases`, matches the Corsair (`fc_c_grp`) relation to an NPC owner's faction, and excludes only **known reputation below -0.55**. Unmapped NPCs and all privately controlled POBs are **ACCESS UNVERIFIED**; a possibly permitted NPC is **LIKELY ACCESSIBLE**, never guaranteed. Player-specific reputation, ID effects and base whitelists are not available in these public feeds.
+- One-way and round-trip modes, two/three trade segments, return to origin system or exact base, mixed cargo, capital/volume limits, POB storage and cash limits, market-freshness notices, and alternative route families. Flight time includes initial approach from selected base, even when the first purchase is elsewhere.
+- Trade search runs in a module worker; market data comes directly from public Darkstat POST endpoints and keeps a distinct browser IndexedDB cache from WAYPOINT and POB telemetry. The full 133-system nav graph ships compressed and is cached in the DTR PWA shell.
+- **Mobile layout:** keeps existing visual identity but removes the accidental 330px tall detail telemetry area and compacts the health/sync/credits/storage cards. All existing production, shipyard and forum modules remain intact.
+- The first preview is for operational testing. Faction-docking states are *predictions*, not verified in-game permission, and route times remain modeled estimates. The initial market search remains bounded; no claim of exhaustive global optimum.
+
 ## Forum transmissions
 
 The **FORUM** workspace is a neutral Corsair transmission composer based on the supplied Montserrat / crimson / gold BBCode format. Sender ID, role, location, recipient, encryption, optional opening/sign-off and top/footer artwork URLs are editable. The optional internal draft subject is retained for organising saved drafts but is never rendered in the preview or exported BBCode header. The shared Corsair top banner and footer are editable. The right-side DTR red-serpent crest (`https://i.imgur.com/QFFOGWY.png`) is **always included and cannot be replaced**, including when restoring older saved drafts. The left-side character portrait remains optional and is stored with each sender profile; no portrait is included by default. A one-time migration clears the previously inherited Aurelio GIF from legacy local work without deleting the rest of an existing draft.
@@ -60,4 +73,4 @@ Run the repository's dependency-free audit with:
 node tests/static-audit.mjs
 ```
 
-GitHub Actions checks JavaScript syntax and runs static, calculator, production, shipyard and forum-composer runtime audits on changes to `main`.
+GitHub Actions checks JavaScript and ES module syntax and runs static, calculator, production, shipyard, forum, pricing, docking-policy and integrated trade-route runtime audits on changes to `main`.

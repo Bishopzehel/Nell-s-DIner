@@ -72,6 +72,14 @@ assert.match(html, /class="base-hero-telemetry"/, 'POB health and sync must shar
 assert(!html.includes('id="healthValue"'), 'structural integrity must not be duplicated in a stat card');
 assert.match(html, /class="stat-grid compact-stats"[\s\S]*?BASE CREDITS[\s\S]*?FREE STORAGE/, 'compact POB stats must retain credits and storage');
 assert.match(html, /data-view="calculator"[\s\S]*?>CALCULATOR</, 'desktop navigation must expose the calculator');
+assert.match(html, /data-view="trade-routes"/, 'desktop must expose its own Trade Routes workspace');
+assert.match(html, /id="pobTabs"/, 'the POB sub-navigation must exist');
+assert.match(html, /id="tradeRoutesView" class="view dtr-routes-view" hidden/, 'Trade Routes must be a native DTR view');
+assert(sw.includes('./dtr-trade-routes.mjs') && sw.includes('./dtr-route-policy.mjs'), 'trade route controls and faction predictor must work offline');
+assert(sw.includes('./trade-core/data/navigation.json.gz'), 'navigation graph must be cached for installed DTR');
+assert(app.includes("'trade-routes'"), 'Trade Routes must be a first-class app route');
+assert(quality.includes("short: 'ROUTES'"), 'mobile section navigation must include Trade Routes');
+assert(!html.includes('data-view="forja-del-vacio"'), 'retired Forja must remain removed');
 assert.match(html, /id="calculatorView"/, 'calculator workspace must exist');
 assert.match(html, /data-view="forum"/, 'desktop navigation must expose the forum');
 assert.match(html, /id="forumView" class="view dtr-forum-view" hidden/, 'forum composer workspace must exist');
@@ -203,8 +211,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'0\.9\.1'/, 'visible build version must match v0.9.1');
-assert.match(sw, /v0\.9\.1/, 'service-worker cache must match v0.9.1');
+assert.match(quality, /version:\s*'1\.0\.0'/, 'visible build version must match v1.0.0');
+assert.match(sw, /v1\.0\.0/, 'service-worker cache must match v1.0.0');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');
 assert(sw.includes('./dtr-production.js'), 'production runtime must be available offline');

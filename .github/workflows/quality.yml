@@ -37,3 +37,10 @@ jobs:
         run: node tests/shipyard-runtime.mjs
       - name: Run price-direction runtime audit
         run: node tests/procurement-runtime.mjs
+      - name: Check native trade route modules
+        run: |
+          for file in dtr-trade-routes.mjs dtr-route-policy.mjs trade-core/*.mjs trade-core/vendor/lp-solver.mjs; do node --check "$file"; done
+      - name: Run route policy audit
+        run: node tests/dtr-route-policy.test.mjs
+      - name: Run trade routes runtime audit
+        run: node tests/dtr-trade-routes.test.mjs

@@ -30,7 +30,7 @@
     { key: 'consumer goods', label: 'Consumer Goods', code: 'GOODS', critical: 2500, warn: 15000 }
   ]);
 
-  const VALID_VIEWS = new Set(['overview', 'calculator', 'forum', ...POBS.map(pob => pob.key)]);
+  const VALID_VIEWS = new Set(['overview', 'trade-routes', 'calculator', 'forum', ...POBS.map(pob => pob.key)]);
   const numberFormat = new Intl.NumberFormat(LOCALE);
   const $ = id => document.getElementById(id);
   const E = {
@@ -38,7 +38,9 @@
     status: $('statusText'),
     refresh: $('refreshButton'),
     tabs: $('tabs'),
+    pobTabs: $('pobTabs'),
     overview: $('overviewView'),
+    routes: $('tradeRoutesView'),
     calculator: $('calculatorView'),
     forum: $('forumView'),
     detail: $('detailView'),
@@ -822,12 +824,22 @@
     renderOverview();
     const calculator = view === 'calculator';
     const forum = view === 'forum';
-    const detail = view !== 'overview' && !calculator && !forum;
+    const routes = view === 'trade-routes';
+    const isPob = view === 'overview' || POBS.some(pob => pob.key === view);
+    const detail = isPob && view !== 'overview';
     E.overview.hidden = view !== 'overview';
+    E.routes.hidden = !routes;
     E.calculator.hidden = !calculator;
     E.forum.hidden = !forum;
     E.detail.hidden = !detail;
+    E.pobTabs.hidden = !isPob;
     E.tabs.querySelectorAll('.tab').forEach(button => {
+      const active = button.dataset.view === (isPob ? 'overview' : view);
+      button.classList.toggle('active', active);
+      if (active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+    E.pobTabs.querySelectorAll('.pob-tab').forEach(button => {
       const active = button.dataset.view === view;
       button.classList.toggle('active', active);
       if (active) button.setAttribute('aria-current', 'page');
@@ -1034,6 +1046,10 @@
 
   E.tabs.addEventListener('click', event => {
     const button = event.target.closest('.tab');
+    if (button) show(button.dataset.view);
+  });
+  E.pobTabs.addEventListener('click', event => {
+    const button = event.target.closest('.pob-tab');
     if (button) show(button.dataset.view);
   });
   E.grid.addEventListener('click', event => {

@@ -1,0 +1,79 @@
+    <section id="tradeRoutesView" class="view dtr-routes-view" hidden>
+      <div class="dtr-routes-hero">
+        <div><p class="section-kicker">CORSAIR SECURE NETWORK // TRADE INTELLIGENCE</p>
+          <h2>Trade Routes</h2><p>LIVE DISCOVERY MARKETS // SHIP-AWARE TRADING // FACTION ACCESS FILTER</p>
+        </div>
+        <div class="dtr-routes-state" id="dtrRoutesState" data-tone="muted"><i></i><span>AWAITING MARKET FEED</span></div>
+      </div>
+      <div class="dtr-routes-profiles" role="group" aria-label="Select cargo class">
+        <button type="button" data-dtr-cargo="freighter-3600" aria-pressed="false"><small>CARGO CLASS // 01</small><strong>3,600</strong><span>500 M/S CRUISE</span></button>
+        <button type="button" data-dtr-cargo="freighter-4300" aria-pressed="false"><small>CARGO CLASS // 02</small><strong>4,300</strong><span>410 M/S CRUISE</span></button>
+        <button type="button" data-dtr-cargo="freighter-5000" aria-pressed="true"><small>CARGO CLASS // 03</small><strong>5,000</strong><span>350 M/S CRUISE</span></button>
+      </div>
+      <p class="dtr-routes-speed-note"><span>ALL SHIPS // MEDIUM DOCKING MODEL</span><span>TRADELANES // 2,500 M/S</span><span>ROUTE TIMES ARE ESTIMATES</span></p>
+      <div class="dtr-routes-workspace">
+        <section class="dtr-routes-controls" aria-label="Configure trade route search">
+          <header><small>01 // ROUTE PARAMETERS</small><strong>FLIGHT PLAN</strong></header>
+          <form id="dtrRoutesForm" autocomplete="off">
+            <label class="dtr-routes-field dtr-routes-wide">
+              <span>STARTING BASE</span>
+              <button type="button" id="dtrRoutesStartPicker" class="dtr-routes-picker" aria-haspopup="dialog" aria-controls="dtrRoutesPickerDialog">
+                <b id="dtrRoutesStartLabel">PLANET CRETE // AWAITING DATA</b><span aria-hidden="true">⌕</span>
+              </button>
+              <small>PLANET CRETE IS THE DEFAULT. CHOOSE ANY OTHER BASE.</small>
+            </label>
+            <fieldset class="dtr-routes-modes"><legend>ROUTE TYPE</legend>
+              <label><input type="radio" name="dtrRoutesMode" value="one"><span>ONE WAY</span></label>
+              <label><input type="radio" name="dtrRoutesMode" value="auto" checked><span>ROUND TRIP</span></label>
+            </fieldset>
+            <div class="dtr-routes-toggles">
+              <label class="dtr-routes-toggle"><input type="checkbox" id="dtrRoutesPobs"><span><strong>INCLUDE POBs</strong><small>OFF BY DEFAULT</small></span><i></i></label>
+              <label class="dtr-routes-toggle"><input type="checkbox" id="dtrRoutesCorsair" checked><span><strong>FLYING AS CORSAIR</strong><small>ON BY DEFAULT // REP PREDICTION</small></span><i></i></label>
+            </div>
+            <details class="dtr-routes-advanced">
+              <summary>ADVANCED SEARCH <span>CAPITAL · CARGO · RETURN · FILTERS <b>+</b></span></summary>
+              <div class="dtr-routes-fields">
+                <label class="dtr-routes-field"><span>USABLE CARGO VOLUME</span><input id="dtrRoutesCargo" type="number" min="1" max="5000" step="1" value="5000" required></label>
+                <label class="dtr-routes-field"><span>TRADING CAPITAL ($)</span><input id="dtrRoutesCapital" type="number" min="0" step="1000" value="5000000" required></label>
+                <label class="dtr-routes-field"><span>MAX ROUTE TIME</span><select id="dtrRoutesMaxTime"><option value="15">15 MIN</option><option value="30">30 MIN</option><option value="60" selected>60 MIN</option><option value="120">120 MIN</option><option value="1440">UNLIMITED</option></select></label>
+                <label class="dtr-routes-field"><span>TRADE LEGS</span><select id="dtrRoutesLegs"><option value="auto" selected>BEST OF 2 OR 3</option><option value="two">2 TRADE LEGS</option><option value="three">3 TRADE LEGS</option></select></label>
+                <label class="dtr-routes-field dtr-routes-wide"><span>RETURN TARGET</span><select id="dtrRoutesReturn"><option value="system" selected>STARTING SYSTEM</option><option value="base">EXACT START BASE</option></select></label>
+                <label class="dtr-routes-check"><input id="dtrRoutesMixed" type="checkbox" checked> <span>OPTIMIZE MIXED CARGO ON SAME FLIGHT</span></label>
+                <label class="dtr-routes-check"><input id="dtrRoutesEmpty" type="checkbox"> <span>ALLOW EMPTY RETURN FLIGHT</span></label>
+                <label class="dtr-routes-check"><input id="dtrRoutesUnknown" type="checkbox"> <span>ALLOW ROUTES WITH UNKNOWN FLIGHT TIME</span></label>
+                <label class="dtr-routes-field"><span>SEARCH DEPTH</span><select id="dtrRoutesDepth"><option value="18">STANDARD</option><option value="45">EXTENDED</option></select></label>
+              </div>
+            </details>
+            <p class="dtr-routes-config" id="dtrRoutesSettingsSummary"></p>
+            <div class="dtr-routes-actions">
+              <button type="submit" class="dtr-routes-primary" id="dtrRoutesSearch">CALCULATE TRADE ROUTES <span aria-hidden="true">↗</span></button>
+              <button type="button" id="dtrRoutesCancel" hidden>ABORT SEARCH</button>
+              <button type="button" id="dtrRoutesRefresh">FORCE MARKET UPLINK</button>
+            </div>
+            <p class="dtr-routes-access-note" id="dtrRoutesAccessNote">Corsair docking is a prediction from public faction relations. Private POB access and your personal reputation cannot be verified.</p>
+          </form>
+        </section>
+        <section class="dtr-routes-results" aria-label="Trade route search results">
+          <header><div><small>02 // TRADE INTELLIGENCE</small><strong>VERIFIED OPPORTUNITIES</strong></div>
+            <label>RANK BY <select id="dtrRoutesSort"><option value="hourly">$ / HOUR</option><option value="profit">TOTAL PROFIT</option></select></label>
+          </header>
+          <div class="dtr-routes-source" id="dtrRoutesSource">AWAITING DISCOVERY MARKETS</div>
+          <div class="dtr-routes-progress" id="dtrRoutesProgress" hidden>CHECKING TRADE CANDIDATES...</div>
+          <div class="dtr-routes-notice" id="dtrRoutesNotice" hidden role="status"></div>
+          <div id="dtrRoutesResults" aria-live="polite" class="dtr-routes-output">
+            <div class="dtr-routes-empty"><strong>START WITH A FLIGHT PLAN</strong><p>Select a cargo class and calculate trade routes using live Discovery market data.</p></div>
+          </div>
+          <footer class="dtr-routes-results-foot" id="dtrRoutesResultsFoot">LIVE MARKET DATA REQUIRED // FLIGHT TIMES ESTIMATED</footer>
+        </section>
+      </div>
+      <dialog id="dtrRoutesPickerDialog" class="dtr-routes-dialog" aria-labelledby="dtrRoutesPickerTitle">
+        <header><div><small>TRADE ROUTES // ORIGIN</small><h3 id="dtrRoutesPickerTitle">Select Starting Base</h3></div><button type="button" data-route-close="dtrRoutesPickerDialog" aria-label="Close">✕</button></header>
+        <label class="dtr-routes-field"><span>SEARCH SYSTEM OR BASE</span><input id="dtrRoutesPickerSearch" type="search" placeholder="Planet Crete, New London, ..." autocomplete="off"></label>
+        <div class="dtr-routes-picker-list" id="dtrRoutesPickerList"></div>
+      </dialog>
+      <dialog id="dtrRoutesDetailDialog" class="dtr-routes-dialog dtr-routes-detail" aria-labelledby="dtrRoutesDetailTitle">
+        <header><div><small>TRADE ROUTES // VERIFIED MANIFEST</small><h3 id="dtrRoutesDetailTitle">Route Details</h3></div><button type="button" data-route-close="dtrRoutesDetailDialog" aria-label="Close">✕</button></header>
+        <div id="dtrRoutesDetailBody"></div>
+      </dialog>
+    </section>
+
