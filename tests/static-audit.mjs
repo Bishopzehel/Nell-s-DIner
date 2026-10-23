@@ -230,8 +230,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'1\.0\.3'/, 'visible build version must match v1.0.1');
-assert.match(sw, /v1\.0\.2/, 'service-worker cache must match v1.0.1');
+assert.match(quality, /version:\s*'1\.0\.3'/, 'visible build version must match v1.0.3');
+assert.match(sw, /v1\.0\.3/, 'service-worker cache must match v1.0.3');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');
 assert(sw.includes('./dtr-production.js'), 'production runtime must be available offline');
