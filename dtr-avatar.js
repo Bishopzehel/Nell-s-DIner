@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const W=200,H=233,$=id=>document.getElementById(id);
-let portrait=null,frame=null,scale=1,offsetX=0,offsetY=0,pointer=null,objectUrl=null;
+let portrait=null,frame=null,frameLoading=true,scale=1,offsetX=0,offsetY=0,pointer=null,objectUrl=null;
 const canvas=$('dtrAvatarCanvas');
 if(!canvas)return;
 const ctx=canvas.getContext('2d',{alpha:true});
@@ -33,10 +33,16 @@ const loadImage=(url)=>new Promise((resolve,reject)=>{
 });
 async function loadFrame(){
  try{
-   frame=await loadImage('./assets/dtr-forum-frame.png');
-   if(frame.naturalWidth!==W||frame.naturalHeight!==H)throw Error('Frame dimensions are not 200 × 233.');
-   say('READY // UPLOAD A PORTRAIT');draw();
- }catch(error){frame=null;say('FRAME ASSET UNAVAILABLE: '+error.message,true);draw();}
+   const image=await loadImage('./assets/dtr-forum-frame.png');
+   if(image.naturalWidth!==W||image.naturalHeight!==H)throw Error('Frame dimensions are not 200 × 233.');
+   frame=image;frameLoading=false;
+   say(portrait?'PORTRAIT LOADED // DTR FRAME READY // DOWNLOAD PNG':'DTR FRAME READY // UPLOAD A PORTRAIT');
+   draw();
+ }catch(error){
+   frame=null;frameLoading=false;
+   say('DTR FRAME COULD NOT LOAD // TRY UPDATE NOW OR REFRESH: '+error.message,true);
+   draw();
+ }
 }
 file.addEventListener('change',async()=>{
  const chosen=file.files?.[0];if(!chosen)return;
@@ -50,7 +56,9 @@ file.addEventListener('change',async()=>{
    if(objectUrl)URL.revokeObjectURL(objectUrl);
    objectUrl=url;
    resetTransform();
-   say('PORTRAIT LOADED // DRAG TO POSITION, THEN DOWNLOAD PNG');
+   if(frame)say('PORTRAIT LOADED // DRAG TO POSITION // DOWNLOAD PNG');
+   else if(frameLoading)say('PORTRAIT LOADED // WAITING FOR DTR FRAME');
+   else say('PORTRAIT LOADED // DTR FRAME MISSING: USE UPDATE NOW OR REFRESH',true);
  }catch(e){URL.revokeObjectURL(url);say('COULD NOT OPEN IMAGE: '+e.message,true)}
  file.value='';draw();
 });

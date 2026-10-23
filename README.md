@@ -51,12 +51,13 @@ The Trade Routes workspace reuses the existing independent WAYPOINT route-search
 - **Mobile layout:** keeps existing visual identity but removes the accidental 330px tall detail telemetry area and compacts the health/sync/credits/storage cards. All existing production, shipyard and forum modules remain intact.
 - The first preview is for operational testing. Faction-docking states are *predictions*, not verified in-game permission, and route times remain modeled estimates. The initial market search remains bounded; no claim of exhaustive global optimum.
 
-## Forum Avatar Frame Tool (v1.0.4)
+## Forum Avatar Frame Tool (v1.0.5)
 
 - The Forum tab includes a small portrait-framing tool below the existing BBCode composer.
 - Upload PNG/JPG/WebP (max 15 MB), reposition with touch/mouse, zoom 100%-400%, reset and download a **200 x 233 PNG**.
 - The supplied sample contains an existing portrait rather than a clean empty overlay. Its decorative red border was extracted and the centre made transparent, preserving the original dimensions. A clean original border source could further improve quality.
 - Entirely client-side: no image is uploaded, and the PWA caches the local frame asset. Upload the exported PNG separately if a public forum image URL is required.
+- v1.0.5 repairs a truncated PNG frame overlay from v1.0.4, which prevented the browser from loading the border and kept DOWNLOAD PNG disabled. The replacement frame is validated with PNG chunk CRCs, full zlib decompression and alpha-mask checks. The editor also preserves the frame loading/error state when a portrait is uploaded. Update the installed PWA with UPDATE NOW to refresh its cached image.
 
 ## Forum transmissions
 
