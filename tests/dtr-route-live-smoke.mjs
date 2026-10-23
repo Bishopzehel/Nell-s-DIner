@@ -118,3 +118,30 @@ if(pobs.status==='fulfilled'&&commodities.status==='fulfilled'&&npcs.status==='f
     name:x.name,nick:x.nickname,corsairRep:fc?.reputations?.find(y=>y.nickname===x.nickname)?.rep??null
   }))));
 }
+
+
+// Read-only live ship registry diagnostic for future DTR cargo-class profiles.
+try {
+  const ships=await read('ships',{});
+  const names=/correo|coreo|essedarius|armicustos|raba|hogosha frigate|corsair train|corsair transport|pilgrim|longhorn/i;
+  const fields=ship=>({
+    name:ship.name,nickname:ship.nickname,type:ship.type,
+    hold_size:ship.hold_size,cruise_speed:ship.cruise_speed,
+    dock_type:ship.dock_type,
+    class:ship.class
+  });
+  console.log('DTR SHIP REGISTRY STATUS '+JSON.stringify({
+    available:Array.isArray(ships),count:Array.isArray(ships)?ships.length:null,
+    sampleKeys:ships?.[0]?Object.keys(ships[0]).slice(0,45):[]
+  }));
+  if(!Array.isArray(ships))throw Error('Ship registry was not an array');
+  console.log('DTR CORSAIR SHIP PROFILES '+JSON.stringify(ships.filter(
+    ship=>names.test([ship.name,ship.nickname,ship.type].join(' '))).map(fields)));
+  console.log('DTR FREIGHTER CARGO BANDS '+JSON.stringify(
+    ships.filter(ship=>[250,3100,3600,4300,5000].includes(ship.hold_size))
+      .filter(ship=>/transport|freighter|frigate|train|hauler|courier|raba|pilgrim|longhorn/i.test(
+        [ship.name,ship.nickname,ship.type].join(' ')))
+      .slice(0,95).map(fields)));
+} catch(error) {
+  console.error('DTR SHIP REGISTRY UNAVAILABLE '+String(error));
+}
