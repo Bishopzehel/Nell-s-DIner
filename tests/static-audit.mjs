@@ -78,6 +78,13 @@ assert.match(html, /id="tradeRoutesView" class="view dtr-routes-view" hidden/, '
 assert(sw.includes('./dtr-trade-routes.mjs') && sw.includes('./dtr-route-policy.mjs'), 'trade route controls and faction predictor must work offline');
 const routePolicy=await read('dtr-route-policy.mjs');
 assert.match(routePolicy, /'li01_01_base','ew16_01_base'/, 'Manhattan and landing-site no-dock rules must both exist');
+assert.match(routePolicy, /dsy_license_fc_c_grp/, 'actual Corsair ID nickname must be used by docking policy');
+assert.match(routePolicy, /REP_MODE/, 'ID rephack adjustment mode must be evaluated');
+assert.match(routePolicy, /NO CORSAIR ID REPHACK/, 'missing ID data must fail closed');
+const tradeRuntime=await read('dtr-trade-routes.mjs');
+assert.match(tradeRuntime, /include_rephacks:true/, 'Darkstat request must include ID rephacks');
+assert.match(tradeRuntime, /filter_nicknames:\[CORSAIR_ID_NICKNAME\]/,
+  'the actual Corsair ID must be selected, not the NPC faction relationship table');
 assert.match(routePolicy, /!includeUnverified&&a\.state==='unverified'/, 'Corsair docking must exclude unknown places unless expressly opted into');
 assert.match(await read('dtr-trade-panel.html'), /id="dtrRoutesUnverified"/, 'Advanced Search must offer explicit risky docking opt-in');
 assert.match(await read('dtr-trade-routes.mjs'), /access\?\.blocked\.includes\(origin\.id\)/, 'starting station must obey the strict Corsair dock filter');
@@ -223,7 +230,7 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'1\.0\.2'/, 'visible build version must match v1.0.1');
+assert.match(quality, /version:\s*'1\.0\.3'/, 'visible build version must match v1.0.1');
 assert.match(sw, /v1\.0\.2/, 'service-worker cache must match v1.0.1');
 assert(sw.includes('./recipe-catalog.js'), 'recipe catalog must be available offline');
 assert(sw.includes('./dtr-calculator.js'), 'calculator runtime must be available offline');

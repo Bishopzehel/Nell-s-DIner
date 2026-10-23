@@ -32,7 +32,15 @@ assert(css.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'mobile nav
 assert(route.includes('new Worker('),'route searches must run in a worker');
 assert(route.includes("normalizeDarkstat(pobs,commodities)"),'route market data must be normalized');
 assert(route.includes("readJson('npc_bases',{},controller.signal)"),'NPC base endpoint must receive an explicit JSON body');
-assert(route.includes("readJson('factions',{include_reputations:true"),'Corsair relations must be explicitly requested from Darkstat');
+assert(route.includes("readJson('factions',{include_reputations:false"),'factions only provide names for ID owner mapping');
+assert(route.includes("readJson('tractors',{include_rephacks:true,filter_nicknames:[CORSAIR_ID_NICKNAME]}"),
+  'actual Corsairs ID rephacks must be requested by exact equipment nickname');
+assert(route.includes('tractors:corsairIds'),
+  'the route access evaluator must use the Corsairs ID rephacks, not NPC faction diplomacy');
+assert(route.includes('corsairIds=Array.isArray(cached.corsairIds)'),
+  'cached old faction-only market snapshots must not silently grant ID docking');
+assert(route.includes('cacheWrite({dataset,factions,corsairIds,loadedAt})'),
+  'cached market data must store the matching ID reputation snapshot');
 assert(route.includes("markResultsStale()"),'changing a profile or filter must invalidate outdated trade results');
 assert(route.includes("assessAccess(dataset.bases"),'Corsair access profile must actually affect search');
 assert(partial.includes('id="dtrRoutesUnverified"')&&!partial.includes('id="dtrRoutesUnverified" checked'),

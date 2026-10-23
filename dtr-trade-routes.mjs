@@ -4,7 +4,7 @@ import { DEFAULT_SHIP_ID,FALLBACK_SHIPS,verifyShipProfile,blockedShipDocks,dockE
 import { createShipController } from './dtr-ship-controller.mjs';
 import { validateNavigation } from './trade-core/navigation.mjs';
 import { groupRoutes } from './trade-core/variants.mjs';
-import { findPlanetCrete, enrichBaseOwners, assessAccess, setLaneSpeed, LANE_SPEED } from './dtr-route-policy.mjs';
+import { findPlanetCrete, enrichBaseOwners, assessAccess, setLaneSpeed, LANE_SPEED, CORSAIR_ID_NICKNAME } from './dtr-route-policy.mjs';
 
 const $=id=>document.getElementById(id);
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -15,7 +15,7 @@ const dateText=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-dig
 const STORAGE_KEY='dtr:trade-routes:settings:v1';
 const DB_NAME='dtr-trade-market-cache-v1';
 const API='https://darkstat.dd84ai.com/api';
-let started=false,busy=false,dataset=null,navigation=null,factions=[],npcBases=[],pobSource=[];
+let started=false,busy=false,dataset=null,navigation=null,factions=[],corsairIds=[],npcBases=[],pobSource=[];
 let dataMode='none',profile=FALLBACK_SHIPS.find(ship=>ship.id===DEFAULT_SHIP_ID),routeMode='auto';
 let startId='',startPreferredId='',startTouched=false,worker=null,results=[],lastStats=null,activeOptions=null;
 let access=null,requests=0,detailIndex=-1,loadedAt=0,pickerTimer=0;
@@ -95,8 +95,8 @@ function refreshControls(){
   ].join(' // ');
   const accessNote=$('dtrRoutesAccessNote');
   if(!$('dtrRoutesCorsair').checked)accessNote.textContent='CORSAIR FILTER OFF // NO ID DOCK CHECK. VERIFY ACCESS FOR YOUR OWN FACTION.';
-  else if(!access?.indexReady)accessNote.textContent='CORSAIR ON // FACTION DATA UNAVAILABLE. UNVERIFIED BASES EXCLUDED BY DEFAULT. CHECK ADVANCED OPTIONS TO OPT IN AT YOUR OWN RISK.';
-  else accessNote.textContent='CORSAIR DOCK FILTER // '+qty(access.counts.restricted)+' RESTRICTED // '+qty(access.counts.unverified)+' UNVERIFIED'+
+  else if(!access?.indexReady)accessNote.textContent='CORSAIR ON // ID REPHACK DATA UNAVAILABLE. UNKNOWN DOCKS BLOCKED. TRY FORCE MARKET UPLINK OR EXPLICITLY OPT IN TO UNVERIFIED BASES AT YOUR OWN RISK.';
+  else accessNote.textContent='CORSAIRS ID REPHACKS // '+qty(access.ruleCount)+' RULES // '+qty(access.counts.restricted)+' RESTRICTED // '+qty(access.counts.unverified)+' UNVERIFIED'+
     (access.includeUnverified?' (MANUALLY INCLUDED)':' (EXCLUDED)')+
     ' // '+qty(access.blocked.length)+' TOTAL FILTERED. PERSONAL REP / FR6 / POB ACL MAY STILL DIFFER.';
 }
@@ -117,7 +117,9 @@ function applyOrigin(){
 }
 function syncAccess(){
   if(!dataset)return;
-  access=assessAccess(dataset.bases,$('dtrRoutesCorsair').checked,factions,{includeUnverified:$('dtrRoutesUnverified').checked});
+  access=assessAccess(dataset.bases,$('dtrRoutesCorsair').checked,factions,{
+    includeUnverified:$('dtrRoutesUnverified').checked,tractors:corsairIds
+  });
   const origin=selectedOrigin();
   if(origin&&$('dtrRoutesCorsair').checked&&access.blocked.includes(origin.id))
     notice('This start base is restricted or unverified for Corsairs. Choose another base, turn Corsair OFF, or deliberately enable unverified docking in Advanced Search. Known denied bases stay blocked.','warn');
@@ -185,21 +187,23 @@ async function marketRefresh(){
   const id=++requests;
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),22000);
   try{
-    const [pobs,commodities,owners,rep]=await Promise.all([
+    const [pobs,commodities,owners,rep,ids]=await Promise.all([
       readJson('pobs',undefined,controller.signal),
       readJson('commodities',{include_market_goods:true,filter_to_useful:true},controller.signal),
       readJson('npc_bases',{},controller.signal).catch(()=>[]),
-      readJson('factions',{include_reputations:true,include_bribes:false,filter_to_useful:false},controller.signal).catch(()=>[])
+      readJson('factions',{include_reputations:false,include_bribes:false,filter_to_useful:false},controller.signal).catch(()=>[]),
+      readJson('tractors',{include_rephacks:true,filter_nicknames:[CORSAIR_ID_NICKNAME]},controller.signal).catch(()=>[])
     ]);
     if(requests!==id)return;
     const parsed=normalizeDarkstat(pobs,commodities);
     if(!parsed.bases.some(b=>b.offers.length))throw Error('Market feed contains no usable offers.');
     pobSource=pobs;npcBases=Array.isArray(owners)?owners:[];factions=Array.isArray(rep)?rep:[];
+    corsairIds=Array.isArray(ids)?ids:[];
     parsed.bases=enrichBaseOwners(parsed,npcBases,pobs);
     dataset=parsed;dataMode='live';loadedAt=Date.now();results=[];lastStats=null;
-    try{await cacheWrite({dataset,factions,loadedAt})}catch{}
+    try{await cacheWrite({dataset,factions,corsairIds,loadedAt})}catch{}
     applyOrigin();syncAccess();refreshControls();renderSource();renderResults();
-    notice(access.indexReady?'FACTION ACCESS PREDICTION READY // CHECK PERSONAL REPUTATION IN GAME.':'FACTION INFO UNAVAILABLE // DOCKING IS UNVERIFIED.','warn');
+    notice(access.indexReady?'CORSAIRS ID REPHACKS ACTIVE // CHECK PERSONAL REP AND BASE ACCESS IN GAME.':'CORSAIRS ID DATA UNAVAILABLE // UNKNOWN DOCKS BLOCKED BY DEFAULT.','warn');
     status('MARKET UPLINK SECURE','good');
   }catch(e){
     if(requests!==id)return;
@@ -233,7 +237,7 @@ function readParams(){
   const block=access?.blocked||[];
   const shipBlocked=blockedShipDocks(dataset.bases,profile,navigation);
   if($('dtrRoutesCorsair').checked&&!access?.indexReady&&!$('dtrRoutesUnverified').checked)
-    throw Error('Corsair faction data unavailable. Strict screening blocks unknown stations. Try FORCE MARKET UPLINK or deliberately opt in to unverified docks.');
+    throw Error('Corsairs ID rephack data unavailable. Strict screening blocks unknown stations. Try FORCE MARKET UPLINK or deliberately opt in to unverified docks.');
   return {
     mode,start:origin.id,cargo,capital,
     excludePobs:!$('dtrRoutesPobs').checked,
@@ -487,7 +491,11 @@ async function bootstrap(){
   try{
     const cached=await cacheRead();
     if(cached?.dataset?.schema===1){
-      dataset=cached.dataset;factions=cached.factions||[];dataMode='cached';loadedAt=cached.loadedAt||0;
+      dataset=cached.dataset;factions=Array.isArray(cached.factions)?cached.factions:[];
+      // Previous cached market snapshots had only NPC faction relationships.
+      // They must NOT be interpreted as Corsairs ID rephacks.
+      corsairIds=Array.isArray(cached.corsairIds)?cached.corsairIds:[];
+      dataMode='cached';loadedAt=cached.loadedAt||0;
       applyOrigin();syncAccess();renderSource();refreshControls();
       status('CACHED MARKET SNAPSHOT','warn');
     }
@@ -511,6 +519,7 @@ window.DTRTradeRoutes=Object.freeze({
     ships:shipController.getRegistryStatus(),favorites:shipController.getFavorites(),
     corsair:$('dtrRoutesCorsair')?.checked,pobs:$('dtrRoutesPobs')?.checked,
     includeUnverified:$('dtrRoutesUnverified')?.checked,blockedByDockPolicy:access?.blocked.length??0,
+    idRepSource:access?.idSource||null,idRepRuleCount:access?.ruleCount??0,
     marketMode:dataMode,navigationReady:Boolean(navigation),resultCount:results.length,
     accessCounts:access?.counts||null
   })

@@ -1,5 +1,5 @@
 import { normalizeDarkstat } from '../trade-core/trade.mjs';
-import { findPlanetCrete, enrichBaseOwners, assessAccess } from '../dtr-route-policy.mjs';
+import { findPlanetCrete, enrichBaseOwners, assessAccess, CORSAIR_ID_NICKNAME, REP_MODE } from '../dtr-route-policy.mjs';
 const API='https://darkstat.dd84ai.com/api';
 async function read(path,body){
   const timer=AbortSignal.timeout(20000);
@@ -9,11 +9,12 @@ async function read(path,body){
   if(!result.ok)throw Error(path+' '+result.status);
   return await result.json();
 }
-const [pobs,commodities,npcs,factions]=await Promise.allSettled([
+const [pobs,commodities,npcs,factions,idFeed]=await Promise.allSettled([
   read('pobs'),read('commodities',{include_market_goods:true,filter_to_useful:true}),
-  read('npc_bases',{}),read('factions',{include_reputations:true,include_bribes:false,filter_to_useful:false})
+  read('npc_bases',{}),read('factions',{include_reputations:false,include_bribes:false,filter_to_useful:false}),
+  read('tractors',{include_rephacks:true,filter_nicknames:[CORSAIR_ID_NICKNAME]})
 ]);
-const all={pobs,commodities,npcs,factions};
+const all={pobs,commodities,npcs,factions,idFeed};
 const status=Object.fromEntries(Object.entries(all).map(([key,result])=>
   [key,result.status==='fulfilled'?{status:'ok',count:Array.isArray(result.value)?result.value.length:'not-array'}:
     {status:'unavailable',reason:String(result.reason)}]));
@@ -24,7 +25,31 @@ else{
   ds.bases=enrichBaseOwners(ds,npcs.status==='fulfilled'?npcs.value:[],pobs.value);
   const candidates=ds.bases.filter(x=>/crete/i.test(x.name||'')).map(x=>({id:x.id,name:x.name,system:x.systemName,kind:x.kind}));
   const origin=findPlanetCrete(ds.bases);
-  const ac=assessAccess(ds.bases,true,factions.status==='fulfilled'?factions.value:[]);
+  const liveIds=idFeed.status==='fulfilled'?idFeed.value:[];
+  const ac=assessAccess(ds.bases,true,factions.status==='fulfilled'?factions.value:[],
+    {tractors:liveIds});
+  const corsairId=liveIds.find(x=>x.nickname===CORSAIR_ID_NICKNAME);
+  const laneHack= corsairId?.rephacks?.find(x=>x.faction_nickname==='fc_lh_grp');
+  console.log('DTR CORSAIR ID VERIFICATION '+JSON.stringify({
+    source:ac.idSource,ready:ac.indexReady,rules:ac.ruleCount,laneHackersRephack:laneHack
+  }));
+  if(!ac.indexReady||!laneHack||laneHack.rep_type!==REP_MODE.MAX||
+      laneHack.reputation >= -0.55){
+    console.error('CORSAIR ID REPHACKS MISSING OR LANE HACKER HOSTILITY NOT ACTIVE');
+    process.exitCode=1;
+  }
+  const cochrane=ds.bases.find(b=>b.id==='li12_07_base');
+  const cochraneAccess=cochrane?ac.byId.get(cochrane.id):null;
+  console.log('DTR ONTARIO CORSAIR DOCKING '+JSON.stringify({
+    id:cochrane?.id,name:cochrane?.name,owner:cochrane?.factionName,
+    access:cochraneAccess,excluded:ac.blocked.includes('li12_07_base')
+  }));
+  if(!cochrane||cochraneAccess?.state!=='restricted'||
+      cochraneAccess.repType!==REP_MODE.MAX||
+      !ac.blocked.includes('li12_07_base')){
+    console.error('Cochrane Depot, Ontario must be blocked by Corsairs ID rephacks');
+    process.exitCode=1;
+  }
   const manhattanBases=ds.bases.filter(b=>/planet manhattan/i.test(b.name));
   const manhattanAudit=manhattanBases.map(b=>({
     id:b.id,name:b.name,owner:b.factionName,docking:ac.byId.get(b.id),excluded:ac.blocked.includes(b.id)
@@ -38,7 +63,8 @@ else{
   console.log('DTR TRADE LIVE DATA '+JSON.stringify({
     marketBases:ds.bases.length,creteCandidates:candidates.slice(0,12),
     defaultOrigin:origin?{id:origin.id,name:origin.name,system:origin.systemName}:null,
-    corsairReputationData:ac.indexReady,corsairReputationCount:corsair?.reputations?.length||0,
+    corsairIdRephacks:ac.indexReady,corsairIdCount:ac.ruleCount,
+    npcFactionRelationsAvailable:!!corsair,corsairReputationCount:corsair?.reputations?.length||0,
     corsairExample:corsair?.reputations?.slice(0,2)||[],access:ac.counts,
     creteAccess:origin?ac.byId.get(origin.id):null
   }));

@@ -1,15 +1,26 @@
-/* DTR Trade Routes: conservative docking and origin rules.
-   Predictions are based on public faction relations, not a player's actual reputation. */
+/* DTR Trade Routes // ID-aware docking policy.
+   Darkstat /api/tractors supplies Corsairs ID rephacks. NPC faction relationship
+   data must NEVER substitute for the actual equipped-ID restrictions. */
 export const CORSAIR_FACTION = 'fc_c_grp';
+export const CORSAIR_ID_NICKNAME = 'dsy_license_fc_c_grp';
 export const DOCK_HOSTILE_THRESHOLD = -0.55;
 export const LANE_SPEED = 2500;
-// Known Corsair no-dock destinations established from player-reported behavior;
-// keep the normal planet and separate landing-site market entry paired.
+
+// Discovery playercntl_rephacks:
+// 0: cap reputation at MAX, 1: floor at MIN, 2: leave unchanged, 3: static.
+export const REP_MODE = Object.freeze({MAX:0, MIN:1, UNCHANGED:2, STATIC:3});
 const CORSAIR_NO_DOCK_IDS = new Set(['li01_01_base','ew16_01_base']);
-export const normalize = value => String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+
+export const normalize = value => String(value??'').normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const first=(obj,...keys)=>keys.map(k=>obj?.[k]).find(v=>v!==null&&v!==undefined&&v!=='');
-const repNumber=value=>{if(value===undefined||value===null||value==='')return null;const n=Number(value);return Number.isFinite(n)?n:null;};
+const repNumber=value=>{
+  if(value===undefined||value===null||value==='')return null;
+  const num=Number(value);
+  return Number.isFinite(num)&&num>=-1&&num<=1?num:null;
+};
 const idOf=x=>String(first(x,'nickname','base_nickname','id')??'');
+
 export function findPlanetCrete(bases){
   if(!Array.isArray(bases))return null;
   const likely=bases.filter(b=>b?.kind==='npc'&&/\bcrete\b/.test(normalize(b.name+' '+b.id)));
@@ -21,12 +32,12 @@ export function findPlanetCrete(bases){
   const nameExact=likely.filter(b=>normalize(b.name)==='planet crete');
   return nameExact.length===1?nameExact[0]:null;
 }
-export function enrichBaseOwners(dataset, npcBases=[], pobs=[]){
+
+export function enrichBaseOwners(dataset,npcBases=[],pobs=[]){
   const byId=new Map();
-  for(const b of [...(Array.isArray(npcBases)?npcBases:[]),...(Array.isArray(pobs)?pobs:[])]){
-    const id=idOf(b);
-    if(!id)continue;
-    byId.set(normalize(id),b);
+  for(const base of [...(Array.isArray(npcBases)?npcBases:[]),...(Array.isArray(pobs)?pobs:[])]){
+    const id=idOf(base);
+    if(id)byId.set(normalize(id),base);
   }
   return dataset.bases.map(base=>{
     const row=byId.get(normalize(base.id));
@@ -37,21 +48,40 @@ export function enrichBaseOwners(dataset, npcBases=[], pobs=[]){
     };
   });
 }
-export function reputationIndex(factions){
-  const rows=Array.isArray(factions)?factions:[];
-  const corsair=rows.find(x=>normalize(x?.nickname)===normalize(CORSAIR_FACTION))||
-    rows.find(x=>normalize(x?.name)==='corsairs');
-  const relation=new Map();
-  const names=new Map();
-  for(const row of rows)if(row?.nickname){names.set(normalize(row.nickname),row.nickname);if(row.name)names.set(normalize(row.name),row.nickname);}
-  for(const r of corsair?.reputations||[]){
-    const nick=first(r,'nickname','faction_nickname')||names.get(normalize(first(r,'name','faction_name')));
-    const value=repNumber(first(r,'rep','reputation'));
-    if(nick&&value!==null)relation.set(normalize(nick),value);
+
+/** Build the dock-policy index from a SINGLE matched Corsairs ID.
+ *  Factions only provide names -> nicknames; their .reputations are NOT used.
+ *  Unknown/invalid/missing ID data is not permission to dock. */
+export function reputationIndex(factions,tractors=[]){
+  const names=new Map(),relation=new Map();
+  for(const faction of Array.isArray(factions)?factions:[]){
+    const id=first(faction,'nickname');
+    if(!id)continue;
+    names.set(normalize(id),String(id));
+    if(faction.name)names.set(normalize(faction.name),String(id));
   }
-  return {ready:Boolean(corsair&&Array.isArray(corsair.reputations)),names,relation};
+  const id=(Array.isArray(tractors)?tractors:[])
+    .find(row=>normalize(row?.nickname)===normalize(CORSAIR_ID_NICKNAME));
+  if(!id||!Array.isArray(id.rephacks)||!id.rephacks.length)
+    return {ready:false,names,relation,source:null,ruleCount:0};
+  for(const row of id.rephacks){
+    const nick=first(row,'faction_nickname');
+    const value=repNumber(row?.reputation),mode=Number(row?.rep_type);
+    if(!nick||value===null||!Number.isInteger(mode)||mode<0||mode>3)continue;
+    const code=String(nick);
+    names.set(normalize(code),code);
+    if(row.faction_name)names.set(normalize(row.faction_name),code);
+    // Missing, duplicate or explicitly unmodified groups never grant access.
+    if(relation.has(normalize(code))){
+      relation.delete(normalize(code));
+      continue;
+    }
+    relation.set(normalize(code),{value,mode});
+  }
+  return {ready:relation.size>0,names,relation,source:CORSAIR_ID_NICKNAME,ruleCount:relation.size};
 }
-export function baseAccess(base, corsairEnabled, index) {
+
+export function baseAccess(base,corsairEnabled,index){
   if(!corsairEnabled)return {state:'unverified',reason:'OTHER ID // PERSONAL REPUTATION UNKNOWN'};
   if(!base)return {state:'unverified',reason:'BASE UNKNOWN'};
   const name=normalize(base.name),system=normalize(base.systemName);
@@ -62,28 +92,46 @@ export function baseAccess(base, corsairEnabled, index) {
   if(base.kind==='pob')return {state:'unverified',reason:'POB WHITELIST / OWNER RULES UNKNOWN'};
   const owner=first(base,'factionNickname','factionName');
   if(!owner)return {state:'unverified',reason:'FACTION OWNER NOT REPORTED'};
-  const nick=index?.names?.get(normalize(owner))||String(owner);
-  if(normalize(nick)===normalize(CORSAIR_FACTION)||normalize(owner)==='corsairs')
-    return {state:'likely',reason:'CORSAIR FACTION OWNED // PERSONAL REP UNVERIFIED'};
-  const score=index?.relation?.get(normalize(nick));
-  if(!Number.isFinite(score))return {state:'unverified',reason:'NO VERIFIED CORSAIR REP RELATION'};
-  if(score<DOCK_HOSTILE_THRESHOLD) return {state:'restricted',score,reason:'HOSTILE CORSAIR FACTION RELATION'};
-  return {state:'likely',score,reason:'CORSAIR RELATION ABOVE DOCKING THRESHOLD'};
+  const nickname=index?.names?.get(normalize(owner))||String(owner);
+  const rule=index?.relation?.get(normalize(nickname));
+  if(!rule)return {state:'unverified',reason:'NO CORSAIR ID REPHACK FOR BASE OWNER'};
+  const {value,mode}=rule;
+  if(mode===REP_MODE.UNCHANGED)
+    return {state:'unverified',reason:'CORSAIR ID DOES NOT CHANGE THIS REPUTATION'};
+  if(mode===REP_MODE.MAX){
+    if(value<DOCK_HOSTILE_THRESHOLD)return {state:'restricted',score:value,repType:mode,
+      reason:'CORSAIR ID MAXIMUM REP IS HOSTILE // DOCKING NOT POSSIBLE WITH THIS ID'};
+    return {state:'likely',score:value,repType:mode,
+      reason:'CORSAIR ID MAXIMUM PERMITS DOCKING // ACTUAL CHARACTER REP MAY BE LOWER'};
+  }
+  if(mode===REP_MODE.MIN){
+    if(value>=DOCK_HOSTILE_THRESHOLD)return {state:'likely',score:value,repType:mode,
+      reason:'CORSAIR ID MINIMUM REP ABOVE DOCK THRESHOLD // OTHER RESTRICTIONS POSSIBLE'};
+    return {state:'unverified',score:value,repType:mode,
+      reason:'CORSAIR ID MINIMUM IS BELOW DOCK THRESHOLD // ACTUAL REP UNKNOWN'};
+  }
+  if(mode===REP_MODE.STATIC){
+    return value<DOCK_HOSTILE_THRESHOLD?
+      {state:'restricted',score:value,repType:mode,reason:'CORSAIR ID FIXED REP IS HOSTILE'}:
+      {state:'likely',score:value,repType:mode,reason:'CORSAIR ID FIXED REP PERMITS DOCKING // OTHER RESTRICTIONS POSSIBLE'};
+  }
+  return {state:'unverified',reason:'INVALID CORSAIR REPHACK MODE'};
 }
-export function assessAccess(bases,corsairEnabled,factions,{includeUnverified=false}={}){
-  const index=reputationIndex(factions);
+
+export function assessAccess(bases,corsairEnabled,factions,{includeUnverified=false,tractors=[]}={}){
+  const index=reputationIndex(factions,tractors);
   const byId=new Map();
   for(const base of bases||[])byId.set(base.id,baseAccess(base,corsairEnabled,index));
   const counts={likely:[...byId.values()].filter(a=>a.state==='likely').length,
     restricted:[...byId.values()].filter(a=>a.state==='restricted').length,
     unverified:[...byId.values()].filter(a=>a.state==='unverified').length};
-  // Fail CLOSED for Corsair ID. Unknown standing is NOT docking permission.
-  // An explicit opt-in may include unverified candidates but never known denials.
   const blocked=corsairEnabled?[...byId].filter(([,a])=>
     a.state==='restricted'||(!includeUnverified&&a.state==='unverified')).map(([id])=>id):[];
-  return {byId,indexReady:index.ready,blocked,counts,includeUnverified:Boolean(includeUnverified),
+  return {byId,indexReady:index.ready,idSource:index.source,ruleCount:index.ruleCount,
+    blocked,counts,includeUnverified:Boolean(includeUnverified),
     filteredUnknown:corsairEnabled&&!includeUnverified?counts.unverified:0};
 }
+
 export function setLaneSpeed(navigation,speed=LANE_SPEED){
   if(!navigation||!Array.isArray(navigation.links))throw Error('Navigation data missing.');
   if(!(speed>0))throw Error('Invalid lane speed.');
