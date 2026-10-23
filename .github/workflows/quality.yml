@@ -33,6 +33,8 @@ jobs:
         run: node tests/production-runtime.mjs
       - name: Run forum composer runtime audit
         run: node tests/forum-runtime.mjs
+      - name: Run avatar frame audit
+        run: node tests/dtr-avatar.test.mjs
       - name: Run shipyard runtime audit
         run: node tests/shipyard-runtime.mjs
       - name: Run price-direction runtime audit

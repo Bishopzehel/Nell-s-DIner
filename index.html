@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./dtr-shipyard.css">
   <link rel="stylesheet" href="./dtr-calculator-mobile.css">
   <link rel="stylesheet" href="./dtr-forum.css">
+  <link rel="stylesheet" href="./dtr-avatar.css">
   <link rel="stylesheet" href="./dtr-trade-routes.css">
   <link rel="stylesheet" href="./dtr-ships.css">
 </head>
@@ -196,6 +197,23 @@
           <div class="dtr-forum-actions"><button type="button" class="primary" data-forum-action="copy">COPY BB CODE</button></div>
         </section>
       </div>
+      <section class="dtr-avatar-tool" aria-label="Forum avatar frame tool" id="dtrAvatarTool">
+        <header class="dtr-avatar-header"><div><small>FORUM TOOLS // PORTRAIT EDITOR</small><h3>Avatar Frame Tool</h3>
+          <p>Upload a portrait, position it beneath the DTR frame and export a finished forum avatar.</p></div><span>200 × 233 PX</span></header>
+        <div class="dtr-avatar-layout">
+          <div class="dtr-avatar-preview"><canvas id="dtrAvatarCanvas" width="200" height="233" aria-label="Draggable DTR avatar preview"></canvas>
+            <small>DRAG THE PORTRAIT TO REPOSITION</small></div>
+          <div class="dtr-avatar-controls">
+            <label class="dtr-avatar-upload"><span>UPLOAD PORTRAIT</span><input id="dtrAvatarFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+            <label for="dtrAvatarZoom">ZOOM <output id="dtrAvatarZoomValue">100%</output>
+              <input id="dtrAvatarZoom" type="range" min="1" max="4" step=".01" value="1"></label>
+            <div class="dtr-avatar-actions"><button id="dtrAvatarReset" type="button" disabled>RESET POSITION</button>
+              <button id="dtrAvatarDownload" class="primary" type="button" disabled>DOWNLOAD PNG</button></div>
+            <p id="dtrAvatarStatus" role="status">LOADING DTR FRAME...</p>
+            <p class="dtr-avatar-note">Your image stays on this device. No uploads or accounts required. The exported PNG preserves the DTR frame at its original 200 × 233 pixel size.</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section id="detailView" class="view" hidden>
@@ -306,6 +324,7 @@
   <script src="./dtr-production.js"></script>
   <script src="./dtr-shipyard.js"></script>
   <script src="./dtr-forum.js"></script>
+  <script src="./dtr-avatar.js"></script>
   <script src="./dtr-quality.js"></script>
   <script src="./dtr-uplink.js"></script>
   <script type="module" src="./dtr-trade-routes.mjs"></script>

@@ -51,6 +51,13 @@ The Trade Routes workspace reuses the existing independent WAYPOINT route-search
 - **Mobile layout:** keeps existing visual identity but removes the accidental 330px tall detail telemetry area and compacts the health/sync/credits/storage cards. All existing production, shipyard and forum modules remain intact.
 - The first preview is for operational testing. Faction-docking states are *predictions*, not verified in-game permission, and route times remain modeled estimates. The initial market search remains bounded; no claim of exhaustive global optimum.
 
+## Forum Avatar Frame Tool (v1.0.4)
+
+- The Forum tab includes a small portrait-framing tool below the existing BBCode composer.
+- Upload PNG/JPG/WebP (max 15 MB), reposition with touch/mouse, zoom 100%-400%, reset and download a **200 x 233 PNG**.
+- The supplied sample contains an existing portrait rather than a clean empty overlay. Its decorative red border was extracted and the centre made transparent, preserving the original dimensions. A clean original border source could further improve quality.
+- Entirely client-side: no image is uploaded, and the PWA caches the local frame asset. Upload the exported PNG separately if a public forum image URL is required.
+
 ## Forum transmissions
 
 The **FORUM** workspace is a neutral Corsair transmission composer based on the supplied Montserrat / crimson / gold BBCode format. Sender ID, role, location, recipient, encryption, optional opening/sign-off and top/footer artwork URLs are editable. The optional internal draft subject is retained for organising saved drafts but is never rendered in the preview or exported BBCode header. The shared Corsair top banner and footer are editable. The right-side DTR red-serpent crest (`https://i.imgur.com/QFFOGWY.png`) is **always included and cannot be replaced**, including when restoring older saved drafts. The left-side character portrait remains optional and is stored with each sender profile; no portrait is included by default. A one-time migration clears the previously inherited Aurelio GIF from legacy local work without deleting the rest of an existing draft.
