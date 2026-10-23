@@ -34,6 +34,35 @@ else{
     creteAccess:origin?ac.byId.get(origin.id):null
   }));
   if(!origin){console.error('PLANET CRETE DEFAULT NOT RESOLVED FROM LIVE FEED');process.exitCode=1;}
+  else {
+    try {
+      const { gunzipSync } = await import('node:zlib');
+      const { readFile } = await import('node:fs/promises');
+      const { search } = await import('../trade-core/search.mjs');
+      const { PROFILES } = await import('../trade-core/trade.mjs');
+      const { setLaneSpeed } = await import('../dtr-route-policy.mjs');
+      const nav = setLaneSpeed(JSON.parse(gunzipSync(await readFile(new URL('../trade-core/data/navigation.json.gz',import.meta.url))).toString('utf8')));
+      const profile=PROFILES.find(p=>p.cargo===5000);
+      const options={mode:'auto',start:origin.id,cargo:5000,capital:5000000,
+        excludePobs:true,blocked:ac.blocked,allowUnknownTime:false,
+        returnScope:'system',returnSystem:'',flexiblePickups:true,
+        allowEmptyReturn:false,mixedCargo:true,maxMinutes:60,sort:'hourly',
+        breadth:18,searchMs:12000,mixedMs:3500,maxChecks:8000,
+        timeModel:{dock:30,jump:15,lane:10,charge:5}};
+      const found=await search(ds,nav,profile,options);
+      console.log('DTR TRADE DEFAULT SEARCH '+JSON.stringify({
+        count:found.results.length,stats:found.stats,
+        top:found.results.slice(0,3).map(r=>({
+          profit:r.profit,seconds:r.seconds,tradeCount:r.tradeCount,
+          path:[r.legs[0]?.source,...r.legs.map(l=>l.target)]
+        }))
+      }));
+      if(!found.results.length)console.log('DTR TRADE DEFAULT SEARCH HAS NO RESULTS; USER CAN CHANGE FILTERS.');
+    } catch(error) {
+      console.error('DTR TRADE DEFAULT SEARCH FAILED',error.stack||String(error));
+      process.exitCode=1;
+    }
+  }
 }
 
 const params=[
