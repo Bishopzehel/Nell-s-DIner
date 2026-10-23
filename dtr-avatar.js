@@ -9,7 +9,7 @@ const ctx=canvas.getContext('2d',{alpha:true});
 const file=$('dtrAvatarFile'),zoom=$('dtrAvatarZoom');
 const save=$('dtrAvatarDownload'),reset=$('dtrAvatarReset'),status=$('dtrAvatarStatus');
 const fit=$('dtrAvatarFit'),fill=$('dtrAvatarFill');
-let portrait=null,frame=null,frameLoading=true,scale=1;
+let portrait=null,frame=null,clipMask=null,frameLoading=true,scale=1;
 let offsetX=0,offsetY=0,pointer=null,objectUrl=null;
 const nudgeButtons=[...document.querySelectorAll('[data-avatar-nudge]')];
 const say=(message,bad=false)=>{status.textContent=message;status.dataset.tone=bad?'warn':'normal'};
@@ -34,17 +34,23 @@ const coverFactor=()=>portrait?Math.max(W/portrait.naturalWidth,H/portrait.natur
 const fitRatio=()=>portrait?Math.min(W/portrait.naturalWidth,H/portrait.naturalHeight)/coverFactor():1;
 function draw(){
   ctx.clearRect(0,0,W,H);
-  // Dark background is intentional when FIT leaves room around the portrait.
-  // This makes the actual exported PNG match its dark preview.
-  ctx.fillStyle='#0b080d';
-  ctx.fillRect(0,0,W,H);
-  if(portrait){
-    const factor=coverFactor()*scale;
-    const width=portrait.naturalWidth*factor,height=portrait.naturalHeight*factor;
-    ctx.drawImage(portrait,(W-width)/2+offsetX,(H-height)/2+offsetY,width,height);
+  // The original PSD-style cutout is irregular, not a rectangle.
+  // Keep the dark FIT matte only inside the actual portrait window.
+  if(clipMask){
+    ctx.fillStyle='#0b080d';
+    ctx.fillRect(0,0,W,H);
+    if(portrait){
+      const factor=coverFactor()*scale;
+      const width=portrait.naturalWidth*factor,height=portrait.naturalHeight*factor;
+      ctx.drawImage(portrait,(W-width)/2+offsetX,(H-height)/2+offsetY,width,height);
+    }
+    ctx.globalCompositeOperation='destination-in';
+    ctx.drawImage(clipMask,0,0,W,H);
+    ctx.globalCompositeOperation='source-over';
   }
+  // Draw the unchanged visible 200x233 DTR border after clipping.
   if(frame)ctx.drawImage(frame,0,0,W,H);
-  save.disabled=!portrait||!frame;
+  save.disabled=!portrait||!frame||!clipMask;
   reset.disabled=!portrait;
   if(fit)fit.disabled=!portrait;
   if(fill)fill.disabled=!portrait;
@@ -73,14 +79,19 @@ const loadImage=url=>new Promise((resolve,reject)=>{
 });
 async function loadFrame(){
   try{
-    const image=await loadImage('./assets/dtr-forum-frame.png');
-    if(image.naturalWidth!==W||image.naturalHeight!==H)throw Error('Frame dimensions are not 200 × 233.');
-    frame=image;frameLoading=false;
-    say(portrait?'PORTRAIT LOADED // DTR FRAME READY // DOWNLOAD PNG':'DTR FRAME READY // UPLOAD A PORTRAIT');
+    const [image,windowMask]=await Promise.all([
+      loadImage('./assets/dtr-forum-frame.png'),
+      loadImage('./assets/dtr-forum-window-mask.png')
+    ]);
+    if(image.naturalWidth!==W||image.naturalHeight!==H||
+       windowMask.naturalWidth!==W||windowMask.naturalHeight!==H)
+      throw Error('Frame or mask dimensions are not 200 × 233.');
+    frame=image;clipMask=windowMask;frameLoading=false;
+    say(portrait?'PORTRAIT LOADED // FRAME & CUTOUT READY // DOWNLOAD PNG':'DTR FRAME & CUTOUT READY // UPLOAD A PORTRAIT');
     draw();
   }catch(error){
-    frame=null;frameLoading=false;
-    say('DTR FRAME COULD NOT LOAD // TRY UPDATE NOW OR REFRESH: '+error.message,true);
+    frame=null;clipMask=null;frameLoading=false;
+    say('DTR FRAME OR MASK COULD NOT LOAD // TRY UPDATE NOW OR REFRESH: '+error.message,true);
     draw();
   }
 }
@@ -98,9 +109,9 @@ file.addEventListener('change',async()=>{
     objectUrl=url;
     zoom.min=String(MIN_ZOOM);
     resetTransform();
-    if(frame)say('PORTRAIT LOADED // FIT, FILL, ZOOM OR DRAG // DOWNLOAD PNG');
+    if(frame&&clipMask)say('PORTRAIT LOADED // FIT, FILL, ZOOM OR DRAG // DOWNLOAD PNG');
     else if(frameLoading)say('PORTRAIT LOADED // WAITING FOR DTR FRAME');
-    else say('PORTRAIT LOADED // DTR FRAME MISSING: USE UPDATE NOW OR REFRESH',true);
+    else say('PORTRAIT LOADED // DTR FRAME OR MASK MISSING: USE UPDATE NOW OR REFRESH',true);
   }catch(error){
     URL.revokeObjectURL(url);
     say('COULD NOT OPEN IMAGE: '+error.message,true);
@@ -144,7 +155,7 @@ canvas.addEventListener('wheel',event=>{
   setZoom(scale+(event.deltaY<0?.05:-.05));
 },{passive:false});
 save.addEventListener('click',()=>{
-  if(!portrait||!frame)return;
+  if(!portrait||!frame||!clipMask)return;
   canvas.toBlob(blob=>{
     if(!blob){say('EXPORT FAILED. TRY AGAIN.',true);return;}
     const url=URL.createObjectURL(blob),a=document.createElement('a');

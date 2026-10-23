@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {inflateSync} from 'node:zlib';
 import {runInNewContext} from 'node:vm';
-const [png,js,html,css,sw]=await Promise.all([
- readFile('assets/dtr-forum-frame.png'),readFile('dtr-avatar.js','utf8'),
+const [png,maskPng,js,html,css,sw]=await Promise.all([
+ readFile('assets/dtr-forum-frame.png'),
+ readFile('assets/dtr-forum-window-mask.png'),readFile('dtr-avatar.js','utf8'),
  readFile('index.html','utf8'),readFile('dtr-avatar.css','utf8'),readFile('sw.js','utf8')
 ]);
 assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a','frame must be PNG');
@@ -19,6 +20,12 @@ for(const name of [
 assert(js.includes("canvas.toBlob("),'the output is generated in browser');
 assert(js.includes("'image/png'"),'exports png');
 assert(js.includes("drawImage(frame,0,0,W,H)"),'frame must not be resized or offset');
+assert(js.includes("drawImage(clipMask,0,0,W,H)"),
+  'portrait cutout should use an identically sized DTR window mask');
+assert(js.includes("globalCompositeOperation='destination-in'"),
+  'real clipping must discard the source portrait outside the shape');
+assert(js.includes("globalCompositeOperation='source-over'"),
+  'visible border must be painted normally after clipping');
 assert(js.includes("canvas.addEventListener('pointermove'"),'touch/mouse drag required');
 assert(js.includes("scale=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM"),'zoom must be bounded');
 assert(js.includes('MIN_ZOOM=.02'),'zoom must allow smaller than cover scale');
@@ -36,6 +43,7 @@ assert(html.includes('id="dtrAvatarZoom" type="range" min="0.02"'),
 assert((html.match(/data-avatar-nudge="/g)||[]).length===4,
   'four small move-image buttons must be accessible');
 assert(sw.includes('./assets/dtr-forum-frame.png'),'frame must be cached');
+assert(sw.includes('./assets/dtr-forum-window-mask.png'),'alpha cutout must be cached');
 
 // Decode every PNG chunk, not just IHDR dimensions. The old broken asset had a
 // plausible signature and dimensions but failed actual browser image decoding.
@@ -74,9 +82,55 @@ const sample=(x,y)=>{
 assert.equal(sample(100,100),0,'portrait area should be transparent');
 assert(sample(7,220)>128,'red border must be visible');
 
+// Decode actual RGBA portrait mask, including PNG row filters. It must have
+// transparent OUTSIDE pixels and an opaque irregular central cutout.
+assert.equal(maskPng.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+assert.equal(maskPng.readUInt32BE(16),W);
+assert.equal(maskPng.readUInt32BE(20),H);
+assert.equal(maskPng[24],8,'mask bit depth');
+assert.equal(maskPng[25],6,'mask must contain actual alpha, not grayscale brightness');
+let maskOffset=8,maskFinished=false;
+const maskIdats=[];
+while(maskOffset<maskPng.length){
+  assert(maskOffset+12<=maskPng.length,'mask has a complete chunk header');
+  const n=maskPng.readUInt32BE(maskOffset),type=maskPng.subarray(maskOffset+4,maskOffset+8).toString('ascii');
+  const end=maskOffset+12+n;
+  assert(end<=maskPng.length,'mask has no truncated PNG data');
+  assert.equal(maskPng.readUInt32BE(maskOffset+8+n),crc32(maskPng.subarray(maskOffset+4,maskOffset+8+n)));
+  if(type==='IDAT')maskIdats.push(maskPng.subarray(maskOffset+8,maskOffset+8+n));
+  maskOffset=end;
+  if(type==='IEND'){maskFinished=true;break;}
+}
+assert(maskFinished&&maskOffset===maskPng.length,'mask must have complete PNG IEND');
+const rgbaRaw=inflateSync(Buffer.concat(maskIdats)),stride=W*4;
+assert.equal(rgbaRaw.length,H*(stride+1),'mask must decompress completely');
+const decoded=new Uint8Array(H*stride);
+let prev=new Uint8Array(stride);
+for(let y=0;y<H;y++){
+  const filter=rgbaRaw[y*(stride+1)];
+  assert(filter>=0&&filter<=4,'PNG filter must be supported');
+  const row=new Uint8Array(stride);
+  for(let x=0;x<stride;x++){
+    const left=x>=4?row[x-4]:0,above=prev[x],upperLeft=x>=4?prev[x-4]:0;
+    const p=left+above-upperLeft;
+    const a=Math.abs(p-left),b=Math.abs(p-above),c=Math.abs(p-upperLeft);
+    const predictor=a<=b&&a<=c?left:b<=c?above:upperLeft;
+    const delta=[0,left,above,Math.floor((left+above)/2),predictor][filter];
+    row[x]=(rgbaRaw[y*(stride+1)+1+x]+delta)&255;
+  }
+  decoded.set(row,y*stride);prev=row;
+}
+const windowAlpha=(x,y)=>decoded[y*stride+x*4+3];
+assert.equal(windowAlpha(100,100),255,'centre of portrait stays visible');
+assert.equal(windowAlpha(20,100),255,'left inner edge belongs to the portrait window');
+assert.equal(windowAlpha(0,0),0,'outer corner must NOT contain portrait');
+assert.equal(windowAlpha(2,100),0,'outside left border must remain transparent');
+assert.equal(windowAlpha(199,100),0,'outside right border must remain transparent');
+assert.equal(windowAlpha(100,232),0,'below the frame must be transparent');
+
 // Simulate the browser control flow: frame load, portrait upload, enable export,
 // canvas compositing and clicking Download PNG. This catches the disabled-button bug.
-const nodes=new Map(),draws=[],portraitDraws=[],downloads=[];
+const nodes=new Map(),draws=[],portraitDraws=[],composites=[],downloads=[];
 class FakeElement{
  constructor(id){
   this.id=id;this.value='1';this.disabled=true;this.textContent='';
@@ -88,9 +142,11 @@ class FakeElement{
    target:this,pointerId:1,clientX:0,clientY:0,...event
  })}
  getContext(){return {
+    globalCompositeOperation:'source-over',
     clearRect(){},fillRect(){},
-    drawImage:(img,...args)=>{
+    drawImage(img,...args){
       draws.push(img.src);
+      composites.push({src:img.src,mode:this.globalCompositeOperation});
       if(img.src.startsWith('blob:'))portraitDraws.push(args);
     }
   }}
@@ -106,8 +162,8 @@ class FakeImage{
  naturalWidth=0;naturalHeight=0;
  set src(value){
   this._src=value;
-  this.naturalWidth=value.includes('dtr-forum-frame')?W:400;
-  this.naturalHeight=value.includes('dtr-forum-frame')?H:400;
+  this.naturalWidth=value.includes('dtr-forum-')?W:400;
+  this.naturalHeight=value.includes('dtr-forum-')?H:400;
   queueMicrotask(()=>this.onload?.());
  }
  get src(){return this._src}
@@ -137,7 +193,7 @@ runInNewContext(js,{
  Blob,console,setTimeout:()=>0,queueMicrotask
 });
 await new Promise(setImmediate);
-assert.match(node('dtrAvatarStatus').textContent,/DTR FRAME READY/);
+assert.match(node('dtrAvatarStatus').textContent,/DTR FRAME.*CUTOUT READY/);
 assert.equal(node('dtrAvatarTool').hidden,true,'avatar is not appended as a visible BBCode footer');
 assert.equal(node('dtrForumComposerWorkspace').hidden,false);
 node('dtrForumToolAvatar').fire('click');
@@ -156,6 +212,11 @@ assert.equal(node('dtrAvatarDownload').disabled,false,
 assert.match(node('dtrAvatarStatus').textContent,/DOWNLOAD PNG/);
 assert(draws.at(-1).includes('dtr-forum-frame'),
   'decorative frame must be drawn on top of uploaded portrait');
+assert.deepEqual(composites.slice(-3).map(entry=>entry.mode),
+  ['source-over','destination-in','source-over'],
+  'paint order must be PORTRAIT, CLIP WINDOW, DTR FRAME');
+assert(composites.at(-2).src.endsWith('dtr-forum-window-mask.png'),
+  'cutout image must be composited under visible border');
 node('dtrAvatarZoom').value='0.5';node('dtrAvatarZoom').fire('input');
 assert.equal(node('dtrAvatarZoomValue').textContent,'50%','slider must shrink below cover scale');
 node('dtrAvatarFit').fire('click');
@@ -173,5 +234,5 @@ node('dtrAvatarDownload').fire('click');
 assert.equal(downloads.length,1,'download action must create a file link');
 assert.equal(downloads[0].name,'DTR-framed-avatar-200x233.png');
 assert.match(node('dtrAvatarStatus').textContent,/EXPORTED/);
-console.log('DTR portrait editor passed: decoded PNG, 200x233 frame, visible forum subtab, FIT/FILL, zoom out, nudge, reset and PNG export.');
+console.log('DTR portrait editor passed: original frame, decoded RGBA clipping window, outside transparency, crop order, FIT/FILL, Forum tabs and PNG download.');
 

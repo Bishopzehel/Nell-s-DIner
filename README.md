@@ -51,11 +51,11 @@ The Trade Routes workspace reuses the existing independent WAYPOINT route-search
 - **Mobile layout:** keeps existing visual identity but removes the accidental 330px tall detail telemetry area and compacts the health/sync/credits/storage cards. All existing production, shipyard and forum modules remain intact.
 - The first preview is for operational testing. Faction-docking states are *predictions*, not verified in-game permission, and route times remain modeled estimates. The initial market search remains bounded; no claim of exhaustive global optimum.
 
-## Forum Avatar Frame Tool (v1.0.6)
+## Forum Avatar Frame Tool (v1.0.7)
 
 - The Forum tab now offers **two top-level tool buttons** directly under the forum header: **FORUM COMPOSER** and **AVATAR FRAME**. Only the chosen tool is visible; the Avatar tool no longer sits underneath the entire BBCode composer. The existing mobile WRITE / PREVIEW / BB CODE controls remain inside Composer.
 - Upload PNG/JPG/WebP (max 15 MB), drag with touch/mouse, use four accessible 8-pixel nudge buttons, or change the zoom from **2% to 400%**. **FIT IMAGE** displays the whole portrait (dark background fills any leftover margins), **FILL FRAME** fills the 200 x 233 canvas. RESET POSITION returns to the centered 100% cover view. Download a **200 x 233 PNG** with the same original frame overlay, unchanged.
-- The supplied sample contains an existing portrait rather than a clean empty overlay. Its decorative red border was extracted and the centre made transparent, preserving the original dimensions. A clean original border source could further improve quality.
+- The supplied 200 × 233 PSD and original transparent PNG define the decorative DTR border. The transparent portrait window was distinguished from the exterior transparency to create a **separate RGBA cutout mask** (`assets/dtr-forum-window-mask.png`). The browser now clips both the portrait and optional FIT matte with Canvas `destination-in`, then paints the existing red frame over it. The resulting export has transparent pixels outside the irregular outline, including the sloped left edge.
 - Entirely client-side: no image is uploaded, and the PWA caches the local frame asset. Upload the exported PNG separately if a public forum image URL is required.
 - v1.0.5 repairs a truncated PNG frame overlay from v1.0.4, which prevented the browser from loading the border and kept DOWNLOAD PNG disabled. The replacement frame is validated with PNG chunk CRCs, full zlib decompression and alpha-mask checks. The editor also preserves the frame loading/error state when a portrait is uploaded. Update the installed PWA with UPDATE NOW to refresh its cached image.
 
@@ -86,3 +86,5 @@ node tests/static-audit.mjs
 GitHub Actions checks JavaScript and ES module syntax and runs static, calculator, production, shipyard, forum, pricing, docking-policy and integrated trade-route runtime audits on changes to `main`.
 
 - v1.0.6 relocates the editor to its own directly selectable Forum workspace, adds FIT/FILL, genuine zoom-out and precision move controls while preserving the unchanged 200×233 border and offline/browser-only export.
+
+- v1.0.7 fixes the PSD-style clipping issue while keeping the original 200 × 233 output, FIT/FILL, touch drag and Forum Composer. Tests validate complete RGBA mask decoding, transparent corner pixels and Canvas portrait → mask → border composition order. App update refreshes the cached mask.
