@@ -564,3 +564,22 @@ input:focus-visible,
     padding-block: 3px;
   }
 }
+
+/* Help Guide button: same header treatment as SYSTEM, with 4-up mobile controls. */
+#helpButton{text-decoration:none;box-sizing:border-box;align-self:stretch;color:var(--rose)}
+#helpButton:visited{color:var(--rose)}
+#helpButton:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:680px){
+ .header-actions{grid-template-columns:minmax(0,1fr) repeat(3,minmax(52px,auto))}
+ .header-actions .uplink{min-width:0;gap:5px}
+ #helpButton{min-width:52px;padding:5px 6px}
+}
+@media(max-width:390px){
+ .header-actions{gap:4px;grid-template-columns:minmax(0,1fr) repeat(3,minmax(48px,auto))}
+ #helpButton{min-width:48px;padding:5px 4px}
+ #helpButton small{font-size:.52rem}
+}
+@media(orientation:landscape) and (max-height:560px) and (max-width:1000px){
+ .header-actions{grid-template-columns:minmax(125px,1fr) repeat(3,minmax(48px,auto));gap:5px}
+ .brand-shell{flex-basis:300px}
+}

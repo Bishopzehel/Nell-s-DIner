@@ -27,6 +27,8 @@ jobs:
           done
       - name: Run static quality audit
         run: node tests/static-audit.mjs
+      - name: Run help guide integration audit
+        run: node tests/dtr-help.test.mjs
       - name: Run calculator runtime audit
         run: node tests/calculator-runtime.mjs
       - name: Run production runtime audit

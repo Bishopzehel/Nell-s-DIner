@@ -88,3 +88,7 @@ GitHub Actions checks JavaScript and ES module syntax and runs static, calculato
 - v1.0.6 relocates the editor to its own directly selectable Forum workspace, adds FIT/FILL, genuine zoom-out and precision move controls while preserving the unchanged 200×233 border and offline/browser-only export.
 
 - v1.0.7 fixes the PSD-style clipping issue while keeping the original 200 × 233 output, FIT/FILL, touch drag and Forum Composer. Tests validate complete RGBA mask decoding, transparent corner pixels and Canvas portrait → mask → border composition order. App update refreshes the cached mask.
+
+## DTR Help Guide (v1.0.8)
+
+Slimy's DTR Help Guide is available directly from the header HELP / USER GUIDE button, next to SYSTEM and INSTALL. It opens `help/guide.html` in a separate browser tab/window and supports direct section links (`#trade-routes`, `#calculator`, `#forum`, `#avatar`, etc.). The guide provides searchable contents, responsive navigation, and 29 screenshots. Guide and screenshot files are included in the PWA's offline application shell and refresh with UPDATE NOW. All 29 original WebP files are copied unchanged from Slimy's ZIP, with their original image quality preserved. The main dashboard features and theme are not modified.

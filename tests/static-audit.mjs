@@ -45,6 +45,8 @@ for (const path of localRuntimeRefs) {
   await read(path);
 }
 
+assert(html.includes('id="helpButton"') && html.includes('href="./help/guide.html"'), 'site header must link to the DTR help guide');
+assert(sw.includes('./help/guide.html') && sw.includes('./help/img/'), 'PWA must cache the full help guide and screenshots');
 assert(!html.includes('enhancements.js'), 'legacy enhancement runtime must not be loaded');
 assert(!html.includes('dtr-pwa-updates.js'), 'legacy PWA update runtime must not be loaded');
 assert(sw.includes('./dtr-responsive.css'), 'responsive layer must be cached for offline startup');
@@ -230,8 +232,8 @@ assert.match(calculatorCss, /\.calculator-quote-grid\[data-cards="3"\]\s*{[\s\S]
 assert.match(productionCss, /@media \(max-width: 760px\)[\s\S]*?\.production-command button\s*\{[\s\S]*?min-height:\s*44px/, 'production calculator action must remain touch friendly on phones');
 assert.match(productionCss, /\.production-materials li\s*\{[\s\S]*?grid-template-columns:/, 'production inputs must keep a structured desktop layout');
 assert.match(quality, /id="dtrCalculatorLaunch"/, 'mobile header controls must expose the calculator');
-assert.match(quality, /version:\s*'1\.0\.7'/, 'visible build version must match v1.0.7');
-assert.match(sw, /v1\.0\.7/, 'service-worker cache must match v1.0.7');
+assert.match(quality, /version:\s*'1\.0\.8'/, 'visible build version must match v1.0.8');
+assert.match(sw, /v1\.0\.8/, 'service-worker cache must match v1.0.8');
 assert(html.includes('id="dtrAvatarCanvas"') && html.includes('id="dtrAvatarDownload"'), 'Forum portrait framing must be reachable');
 assert(html.includes('id="dtrForumToolAvatar"') && html.includes('id="dtrForumToolComposer"'),
   'Forum must expose the portrait tool alongside the composer near the top');
