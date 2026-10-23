@@ -135,6 +135,9 @@ try {
     sampleKeys:ships?.[0]?Object.keys(ships[0]).slice(0,45):[]
   }));
   if(!Array.isArray(ships))throw Error('Ship registry was not an array');
+  console.log('DTR BULWARK/PILGRIM SHIP AUDIT '+JSON.stringify(ships.filter(
+    ship=>/bulwark|pilgrim|liner|hogosha|corsair/i.test([ship.name,ship.nickname].join(' ')))
+    .map(fields)));
   console.log('DTR CORSAIR SHIP PROFILES '+JSON.stringify(ships.filter(
     ship=>names.test([ship.name,ship.nickname,ship.type].join(' '))).map(fields)));
   console.log('DTR SMALL CARGO QUERY '+JSON.stringify({
