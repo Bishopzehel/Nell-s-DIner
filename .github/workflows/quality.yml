@@ -44,3 +44,6 @@ jobs:
         run: node tests/dtr-route-policy.test.mjs
       - name: Run trade routes runtime audit
         run: node tests/dtr-trade-routes.test.mjs
+      - name: Probe live Darkstat trade data
+        continue-on-error: true
+        run: node tests/dtr-route-live-smoke.mjs
