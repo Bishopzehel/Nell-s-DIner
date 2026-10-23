@@ -22,7 +22,7 @@ assert.match(guide, /class="dh-search"/, 'Guide must retain its working search')
 assert.match(guide, /class="dh-menu"/, 'Guide must retain its mobile contents drawer');
 assert.match(guide, /class="dh-lightbox"/, 'Guide must allow enlarging screenshots');
 assert.match(guide, /IntersectionObserver/, 'Guide must retain table-of-contents highlighting');
-assert.match(guide, /<script>[\s\S]*<\/script>/, 'Guide's inline behavior must remain bundled');
+assert.match(guide, /<script>[\s\S]*<\/script>/, 'The guide inline behavior must remain bundled');
 for(const anchor of [
  'start','layout','header','command-bar','system','install','overview','pob-status',
  'uplink-panel','matrix','pob-detail','maintenance','production','shipyard','pinned',
