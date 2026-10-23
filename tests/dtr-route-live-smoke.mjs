@@ -137,6 +137,12 @@ try {
   if(!Array.isArray(ships))throw Error('Ship registry was not an array');
   console.log('DTR CORSAIR SHIP PROFILES '+JSON.stringify(ships.filter(
     ship=>names.test([ship.name,ship.nickname,ship.type].join(' '))).map(fields)));
+  console.log('DTR SMALL CARGO QUERY '+JSON.stringify({
+    exact250:ships.filter(s=>s.hold_size===250).map(fields),
+    from200to350:ships.filter(s=>s.hold_size>=200&&s.hold_size<=350).slice(0,50).map(fields),
+    freighterBands:[...new Set(ships.filter(s=>s.type==='freighter').map(s=>s.hold_size))].sort((a,b)=>a-b),
+    genericTransports:ships.filter(s=>s.type==='transport'&&s.hold_size>=200).length
+  }));
   console.log('DTR FREIGHTER CARGO BANDS '+JSON.stringify(
     ships.filter(ship=>[250,3100,3600,4300,5000].includes(ship.hold_size))
       .filter(ship=>/transport|freighter|frigate|train|hauler|courier|raba|pilgrim|longhorn/i.test(
