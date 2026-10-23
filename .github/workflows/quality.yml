@@ -46,6 +46,8 @@ jobs:
         run: node tests/dtr-trade-routes.test.mjs
       - name: Run ship profiles audit
         run: node tests/dtr-ships.test.mjs
+      - name: Run ship selector interaction audit
+        run: node tests/dtr-ships-dom.test.mjs
       - name: Probe live Darkstat trade data
         continue-on-error: true
         run: node tests/dtr-route-live-smoke.mjs
