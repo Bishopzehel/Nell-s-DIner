@@ -154,3 +154,32 @@ try {
 } catch(error) {
   console.error('DTR SHIP REGISTRY UNAVAILABLE '+String(error));
 }
+
+
+// Audit: ID rephacks (NOT faction-vs-faction relations) for Corsair ID selection.
+try {
+  const tractors=await read('tractors',{});
+  if(!Array.isArray(tractors))throw Error('tractors endpoint did not return a list');
+  const names=tractors.filter(x=>/corsair|lane hacker|lanehacker|pirate|piracy|rogue|hessian|outcast/i.test([x.name,x.nickname].join(' ')));
+  const factionsFromApi=factions.status==='fulfilled'?factions.value:[];
+  const lane=factionsFromApi.filter(x=>/lane.?hacker|corsair|rogue|outcast/i.test(x.name||'')).map(x=>({name:x.name,nickname:x.nickname}));
+  const targets=new Set([...lane.map(x=>x.nickname),'fc_c_grp']);
+  const fmt=(x)=>({name:x.name,nickname:x.nickname,short_nickname:x.short_nickname,
+    rephacksCount:Object.keys(x.rephacks||{}).length,
+    targetReps:Object.entries(x.rephacks||{}).filter(([key,v])=>
+      targets.has(key)||/lane.?hacker|corsair|rogue|outcast/i.test(v?.faction_name||'')).map(
+        ([key,v])=>({faction:key,name:v.faction_name,rep:v.reputation,type:v.rep_type})).slice(0,20)
+  });
+  console.log('DTR REPHACK ID INDEX '+JSON.stringify({tractorCount:tractors.length,
+    possibleCorsairIds:names.map(fmt),laneFactions:lane,
+    sampleRaw:tractors[0]?{name:tractors[0].name,nickname:tractors[0].nickname,
+      repKeys:Object.keys(tractors[0].rephacks||{}).slice(0,8),
+      firstRephack:Object.values(tractors[0].rephacks||{})[0]}:null
+  }));
+  const ontario=npcs.status==='fulfilled'?npcs.value.filter(b=>/cochrane|ontario/i.test(b.name||'')):[];
+  console.log('DTR ONTARIO BASE AUDIT '+JSON.stringify(ontario.map(b=>({
+    name:b.name,nickname:b.nickname,system:b.system_name,owner:b.faction_name
+  }))));
+} catch(error) {
+  console.error('DTR REPHACK ID PROBE FAILED '+String(error));
+}
