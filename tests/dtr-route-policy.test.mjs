@@ -51,7 +51,7 @@ const index=reputationIndex(factions,carrier);
 assert(index.ready);
 assert.equal(index.source,CORSAIR_ID_NICKNAME);
 assert.equal(index.ruleCount,6);
-assert.deepEqual(index.relation.get('fc_lh_grp'),{value:-0.7,mode:REP_MODE.MAX});
+assert.deepEqual(index.relation.get('fc lh grp'),{value:-0.7,mode:REP_MODE.MAX});
 const status=assessAccess(owned,true,factions,ids);
 assert(status.indexReady,'the actual Corsairs ID rephacks should be used');
 assert.equal(status.byId.get('planet_crete').state,'likely');
