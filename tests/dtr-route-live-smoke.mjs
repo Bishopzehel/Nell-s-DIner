@@ -78,3 +78,28 @@ const checks=await Promise.all(params.map(async ([path,body])=>{
   }catch(e){return {path,body,ok:false,error:String(e)}}
 }));
 console.log('DTR TRADE REQUEST BODY PROBES '+JSON.stringify(checks));
+
+
+if(pobs.status==='fulfilled'&&commodities.status==='fulfilled'&&npcs.status==='fulfilled'&&factions.status==='fulfilled'){
+  const names=['manhattan','crete','fort bush','newark','pittsburgh','missouri','rochester'];
+  const selected=npcs.value.filter(x=>names.some(k=>String(x.name).toLowerCase().includes(k)));
+  const fc=factions.value.find(x=>x.nickname==='fc_c_grp');
+  const candidateMap=new Map(factions.value.flatMap(x=>[
+    [String(x.name||'').toLowerCase(),x.nickname],[String(x.nickname||'').toLowerCase(),x.nickname]
+  ]));
+  const selectedBases=selected.map(x=>{
+    const fn=candidateMap.get(String(x.faction_name||'').toLowerCase())||x.faction_name;
+    const rel=fc?.reputations?.find(v=>String(v.nickname).toLowerCase()===String(fn).toLowerCase());
+    const game=commodities.value.flatMap(c=>c.market_goods||[]).filter(m=>m.base_nickname===x.nickname).slice(0,2);
+    return {
+      id:x.nickname,name:x.name,system:x.system_name,owner:x.faction_name,ownerCode:fn,
+      corsairRelation:rel?.rep??null,reputationRow:rel||null,
+      statusFields:Object.fromEntries(Object.entries(x).filter(([k])=>/dock|access|allow|reputation|restricted|reachab|blacklist|whitelist/i.test(k))),
+      examples:game.map(m=>({nickname:m.base_nickname,keys:Object.keys(m).filter(k=>/dock|access|allow|reputation|restricted|reachab/i.test(k))}))
+    };
+  });
+  console.log('DTR DOCK AUDIT SELECTED BASES '+JSON.stringify(selectedBases));
+  console.log('DTR DOCK AUDIT LIBERTY FACTIONS '+JSON.stringify(factions.value.filter(x=>/liberty|police|government|corsair/i.test(x.name||'')).map(x=>({
+    name:x.name,nick:x.nickname,corsairRep:fc?.reputations?.find(y=>y.nickname===x.nickname)?.rep??null
+  }))));
+}
