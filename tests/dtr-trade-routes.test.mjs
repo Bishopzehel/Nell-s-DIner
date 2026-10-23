@@ -29,6 +29,9 @@ assert(css.includes('flex:0 0 auto'),'mobile telemetry must drop original 330px 
 assert(css.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'mobile nav must have four main sections');
 assert(route.includes('new Worker('),'route searches must run in a worker');
 assert(route.includes("normalizeDarkstat(pobs,commodities)"),'route market data must be normalized');
+assert(route.includes("readJson('npc_bases',{},controller.signal)"),'NPC base endpoint must receive an explicit JSON body');
+assert(route.includes("readJson('factions',{include_reputations:true"),'Corsair relations must be explicitly requested from Darkstat');
+assert(route.includes("markResultsStale()"),'changing a profile or filter must invalidate outdated trade results');
 assert(route.includes("assessAccess(dataset.bases"),'Corsair access profile must actually affect search');
 assert(route.includes("blocked:$('dtrRoutesCorsair').checked?block:[]"),'reputation filter must be disableable');
 assert(route.includes('returnScope:'),'return mode must be user-changeable');

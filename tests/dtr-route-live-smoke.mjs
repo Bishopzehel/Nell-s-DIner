@@ -11,7 +11,7 @@ async function read(path,body){
 }
 const [pobs,commodities,npcs,factions]=await Promise.allSettled([
   read('pobs'),read('commodities',{include_market_goods:true,filter_to_useful:true}),
-  read('npc_bases'),read('factions')
+  read('npc_bases',{}),read('factions',{include_reputations:true,include_bribes:false,filter_to_useful:false})
 ]);
 const all={pobs,commodities,npcs,factions};
 const status=Object.fromEntries(Object.entries(all).map(([key,result])=>
@@ -25,10 +25,12 @@ else{
   const candidates=ds.bases.filter(x=>/crete/i.test(x.name||'')).map(x=>({id:x.id,name:x.name,system:x.systemName,kind:x.kind}));
   const origin=findPlanetCrete(ds.bases);
   const ac=assessAccess(ds.bases,true,factions.status==='fulfilled'?factions.value:[]);
+  const corsair=factions.status==='fulfilled'?factions.value.find(f=>f.nickname==='fc_c_grp'):null;
   console.log('DTR TRADE LIVE DATA '+JSON.stringify({
     marketBases:ds.bases.length,creteCandidates:candidates.slice(0,12),
     defaultOrigin:origin?{id:origin.id,name:origin.name,system:origin.systemName}:null,
-    corsairReputationData:ac.indexReady,access:ac.counts,
+    corsairReputationData:ac.indexReady,corsairReputationCount:corsair?.reputations?.length||0,
+    corsairExample:corsair?.reputations?.slice(0,2)||[],access:ac.counts,
     creteAccess:origin?ac.byId.get(origin.id):null
   }));
   if(!origin){console.error('PLANET CRETE DEFAULT NOT RESOLVED FROM LIVE FEED');process.exitCode=1;}

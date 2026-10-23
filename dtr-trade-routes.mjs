@@ -117,11 +117,13 @@ function setProfile(id){
   $('dtrRoutesCargo').max=found.cargo;
   $('dtrRoutesCargo').value=found.cargo;
   document.querySelectorAll('#tradeRoutesView [data-dtr-cargo]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.dtrCargo===id)));
+  markResultsStale();
   refreshControls();savePreferences();
 }
 function setRouteMode(mode){
   routeMode=['one','auto','two','three'].includes(mode)?mode:'auto';
   document.querySelectorAll('#tradeRoutesView input[name="dtrRoutesMode"]').forEach(i=>{i.checked=i.value===(routeMode==='one'?'one':'auto')});
+  markResultsStale();
   refreshControls();savePreferences();
 }
 function dbOpen(){
@@ -184,8 +186,8 @@ async function marketRefresh(){
     const [pobs,commodities,owners,rep]=await Promise.all([
       readJson('pobs',undefined,controller.signal),
       readJson('commodities',{include_market_goods:true,filter_to_useful:true},controller.signal),
-      readJson('npc_bases',undefined,controller.signal).catch(()=>[]),
-      readJson('factions',undefined,controller.signal).catch(()=>[])
+      readJson('npc_bases',{},controller.signal).catch(()=>[]),
+      readJson('factions',{include_reputations:true,include_bribes:false,filter_to_useful:false},controller.signal).catch(()=>[])
     ]);
     if(requests!==id)return;
     const parsed=normalizeDarkstat(pobs,commodities);
@@ -258,6 +260,12 @@ function searchWorker(){
   };
   worker.onerror=e=>{busy=false;notice('Trade calculation worker failed: '+(e.message||'Unknown error'),'danger');status('WORKER ERROR','danger');refreshControls()};
   return worker;
+}
+function markResultsStale(){
+  if(!results.length&&!lastStats)return;
+  results=[];lastStats=null;
+  renderResults();
+  notice('ROUTE SETTINGS CHANGED // RECALCULATE TO APPLY THE NEW FILTERS.','warn');
 }
 function runSearch(){
   if(busy){worker?.postMessage({type:'cancel'});requests++;busy=false;}
@@ -387,7 +395,7 @@ function renderPicker(query){
 function selectOrigin(id){
   const base=dataset?.bases.find(b=>b.id===id);if(!base)return;
   startId=base.id;startPreferredId=id;startTouched=true;
-  applyOrigin();syncAccess();refreshControls();savePreferences();
+  applyOrigin();syncAccess();markResultsStale();refreshControls();savePreferences();
   $('dtrRoutesPickerDialog').close();document.body.classList.remove('modal-open');
 }
 function closeDialog(id){
@@ -418,6 +426,7 @@ function bind(){
     if(e.target.name==='dtrRoutesMode'){setRouteMode(e.target.value);return;}
     if(e.target.id==='dtrRoutesCorsair'){syncAccess();renderSource();}
     if(e.target.id==='dtrRoutesPobs'){applyOrigin();}
+    markResultsStale();
     refreshControls();savePreferences();
   });
   $('tradeRoutesView').addEventListener('input',e=>{if(e.target.id==='dtrRoutesPickerSearch')return;refreshControls();});
