@@ -124,9 +124,14 @@
 
     <section id="forumView" class="view dtr-forum-view" hidden>
       <header class="dtr-forum-hero">
-        <div><p class="section-kicker">CORSAIR SECURE NETWORK // COMMUNICATIONS</p><h2>Forum Transmission Composer</h2><p>WRITE A POST, CHECK THE PREVIEW, THEN COPY THE GENERATED FORUM BB CODE.</p></div>
+        <div><p class="section-kicker">CORSAIR SECURE NETWORK // COMMUNICATIONS</p><h2>Forum Tools</h2><p>COMPOSE TRANSMISSIONS OR CREATE A FRAMED CHARACTER PORTRAIT.</p></div>
         <em>LOCAL DRAFTS // NO ACCOUNT REQUIRED</em>
       </header>
+      <nav class="dtr-forum-tool-tabs" aria-label="Choose a forum tool">
+        <button id="dtrForumToolComposer" type="button" data-forum-tool="composer" aria-pressed="true"><span>01</span> FORUM COMPOSER</button>
+        <button id="dtrForumToolAvatar" type="button" data-forum-tool="avatar" aria-pressed="false"><span>02</span> AVATAR FRAME</button>
+      </nav>
+      <div id="dtrForumComposerWorkspace" aria-label="Forum transmission composer">
       <p class="dtr-forum-copy-feedback" id="dtrForumCopyFeedback" role="status" aria-live="polite" hidden></p>
       <nav class="dtr-forum-lenses" role="tablist" aria-label="Forum composer views">
         <button type="button" role="tab" data-forum-lens="write" aria-controls="dtrForumWrite" aria-selected="true">01 WRITE</button>
@@ -197,7 +202,8 @@
           <div class="dtr-forum-actions"><button type="button" class="primary" data-forum-action="copy">COPY BB CODE</button></div>
         </section>
       </div>
-      <section class="dtr-avatar-tool" aria-label="Forum avatar frame tool" id="dtrAvatarTool">
+      </div>
+      <section class="dtr-avatar-tool" aria-label="Forum avatar frame tool" id="dtrAvatarTool" hidden>
         <header class="dtr-avatar-header"><div><small>FORUM TOOLS // PORTRAIT EDITOR</small><h3>Avatar Frame Tool</h3>
           <p>Upload a portrait, position it beneath the DTR frame and export a finished forum avatar.</p></div><span>200 × 233 PX</span></header>
         <div class="dtr-avatar-layout">
@@ -205,12 +211,25 @@
             <small>DRAG THE PORTRAIT TO REPOSITION</small></div>
           <div class="dtr-avatar-controls">
             <label class="dtr-avatar-upload"><span>UPLOAD PORTRAIT</span><input id="dtrAvatarFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
-            <label for="dtrAvatarZoom">ZOOM <output id="dtrAvatarZoomValue">100%</output>
-              <input id="dtrAvatarZoom" type="range" min="1" max="4" step=".01" value="1"></label>
+            <div class="dtr-avatar-fit-actions" role="group" aria-label="Portrait sizing">
+              <button id="dtrAvatarFit" type="button" disabled>FIT IMAGE <small>SHOW WHOLE PORTRAIT</small></button>
+              <button id="dtrAvatarFill" type="button" disabled>FILL FRAME <small>COVER THE FRAME</small></button>
+            </div>
+            <label for="dtrAvatarZoom">ZOOM <output id="dtrAvatarZoomValue" for="dtrAvatarZoom">100%</output>
+              <input id="dtrAvatarZoom" type="range" min="0.02" max="4" step=".01" value="1" aria-label="Portrait zoom 2 to 400 percent"></label>
+            <div class="dtr-avatar-move">
+              <span>FINE POSITIONING <small>OR DRAG THE IMAGE</small></span>
+              <div class="dtr-avatar-nudge" role="group" aria-label="Move portrait">
+                <button type="button" data-avatar-nudge="left" aria-label="Move portrait left" disabled>←</button>
+                <button type="button" data-avatar-nudge="up" aria-label="Move portrait up" disabled>↑</button>
+                <button type="button" data-avatar-nudge="down" aria-label="Move portrait down" disabled>↓</button>
+                <button type="button" data-avatar-nudge="right" aria-label="Move portrait right" disabled>→</button>
+              </div>
+            </div>
             <div class="dtr-avatar-actions"><button id="dtrAvatarReset" type="button" disabled>RESET POSITION</button>
               <button id="dtrAvatarDownload" class="primary" type="button" disabled>DOWNLOAD PNG</button></div>
             <p id="dtrAvatarStatus" role="status">LOADING DTR FRAME...</p>
-            <p class="dtr-avatar-note">Your image stays on this device. No uploads or accounts required. The exported PNG preserves the DTR frame at its original 200 × 233 pixel size.</p>
+            <p class="dtr-avatar-note">FIT shows the entire picture on a dark background; FILL covers the frame. Drag or use the arrows to reposition. Your image stays on this device. Export: original 200 × 233 px PNG.</p>
           </div>
         </div>
       </section>

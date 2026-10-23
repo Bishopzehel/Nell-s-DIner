@@ -1,98 +1,158 @@
-/* DTR Forum // Portrait Frame Tool. Local-only 200 × 233 pixel PNG compositor. */
+/* DTR Forum // Portrait Frame Tool. Local-only 200 × 233 PNG compositor. */
 (() => {
 'use strict';
-const W=200,H=233,$=id=>document.getElementById(id);
-let portrait=null,frame=null,frameLoading=true,scale=1,offsetX=0,offsetY=0,pointer=null,objectUrl=null;
+const W=200,H=233,MIN_ZOOM=.02,MAX_ZOOM=4,NUDGE=8;
+const $=id=>document.getElementById(id);
 const canvas=$('dtrAvatarCanvas');
 if(!canvas)return;
 const ctx=canvas.getContext('2d',{alpha:true});
-const file=$('dtrAvatarFile'),zoom=$('dtrAvatarZoom'),save=$('dtrAvatarDownload'),reset=$('dtrAvatarReset'),status=$('dtrAvatarStatus');
+const file=$('dtrAvatarFile'),zoom=$('dtrAvatarZoom');
+const save=$('dtrAvatarDownload'),reset=$('dtrAvatarReset'),status=$('dtrAvatarStatus');
+const fit=$('dtrAvatarFit'),fill=$('dtrAvatarFill');
+let portrait=null,frame=null,frameLoading=true,scale=1;
+let offsetX=0,offsetY=0,pointer=null,objectUrl=null;
+const nudgeButtons=[...document.querySelectorAll('[data-avatar-nudge]')];
 const say=(message,bad=false)=>{status.textContent=message;status.dataset.tone=bad?'warn':'normal'};
-const minScale=()=>portrait?Math.max(W/portrait.naturalWidth,H/portrait.naturalHeight):1;
-function draw(){
- ctx.clearRect(0,0,W,H);
- if(portrait){
-   const k=minScale()*scale;
-   const width=portrait.naturalWidth*k,height=portrait.naturalHeight*k;
-   ctx.drawImage(portrait,(W-width)/2+offsetX,(H-height)/2+offsetY,width,height);
- }
- if(frame)ctx.drawImage(frame,0,0,W,H);
- save.disabled=!portrait||!frame;
- reset.disabled=!portrait;
+
+// Show either tool directly below the FORUM header. No more scrolling through
+// the BBCode composer to reach the portrait editor.
+const composer=$('dtrForumComposerWorkspace'),avatar=$('dtrAvatarTool');
+const composerButton=$('dtrForumToolComposer'),avatarButton=$('dtrForumToolAvatar');
+function showTool(which){
+  const selected=which==='avatar';
+  if(!composer||!avatar)return;
+  composer.hidden=selected;
+  avatar.hidden=!selected;
+  composerButton?.setAttribute('aria-pressed',String(!selected));
+  avatarButton?.setAttribute('aria-pressed',String(selected));
 }
-function setZoom(v){
- scale=Math.max(1,Math.min(4,Number(v)||1));
- zoom.value=String(scale);$('dtrAvatarZoomValue').textContent=Math.round(scale*100)+'%';draw();
+composerButton?.addEventListener('click',()=>showTool('composer'));
+avatarButton?.addEventListener('click',()=>showTool('avatar'));
+showTool('composer');
+
+const coverFactor=()=>portrait?Math.max(W/portrait.naturalWidth,H/portrait.naturalHeight):1;
+const fitRatio=()=>portrait?Math.min(W/portrait.naturalWidth,H/portrait.naturalHeight)/coverFactor():1;
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // Dark background is intentional when FIT leaves room around the portrait.
+  // This makes the actual exported PNG match its dark preview.
+  ctx.fillStyle='#0b080d';
+  ctx.fillRect(0,0,W,H);
+  if(portrait){
+    const factor=coverFactor()*scale;
+    const width=portrait.naturalWidth*factor,height=portrait.naturalHeight*factor;
+    ctx.drawImage(portrait,(W-width)/2+offsetX,(H-height)/2+offsetY,width,height);
+  }
+  if(frame)ctx.drawImage(frame,0,0,W,H);
+  save.disabled=!portrait||!frame;
+  reset.disabled=!portrait;
+  if(fit)fit.disabled=!portrait;
+  if(fill)fill.disabled=!portrait;
+  nudgeButtons.forEach(button=>button.disabled=!portrait);
+}
+function setZoom(value){
+  const n=Number(value);
+  scale=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,Number.isFinite(n)?n:1));
+  zoom.value=String(scale);
+  $('dtrAvatarZoomValue').textContent=Math.round(scale*100)+'%';
+  draw();
 }
 function resetTransform(){offsetX=0;offsetY=0;setZoom(1)}
-const loadImage=(url)=>new Promise((resolve,reject)=>{
- const image=new Image();
- image.onload=()=>resolve(image);
- image.onerror=()=>reject(new Error('Could not decode the image.'));
- image.src=url;
+function fitImage(){
+  if(!portrait)return;
+  offsetX=0;offsetY=0;
+  // A very wide portrait can require a smaller zoom floor than the initial UI.
+  zoom.min=String(Math.min(MIN_ZOOM,fitRatio()));
+  setZoom(fitRatio());
+}
+const loadImage=url=>new Promise((resolve,reject)=>{
+  const image=new Image();
+  image.onload=()=>resolve(image);
+  image.onerror=()=>reject(new Error('Could not decode the image.'));
+  image.src=url;
 });
 async function loadFrame(){
- try{
-   const image=await loadImage('./assets/dtr-forum-frame.png');
-   if(image.naturalWidth!==W||image.naturalHeight!==H)throw Error('Frame dimensions are not 200 × 233.');
-   frame=image;frameLoading=false;
-   say(portrait?'PORTRAIT LOADED // DTR FRAME READY // DOWNLOAD PNG':'DTR FRAME READY // UPLOAD A PORTRAIT');
-   draw();
- }catch(error){
-   frame=null;frameLoading=false;
-   say('DTR FRAME COULD NOT LOAD // TRY UPDATE NOW OR REFRESH: '+error.message,true);
-   draw();
- }
+  try{
+    const image=await loadImage('./assets/dtr-forum-frame.png');
+    if(image.naturalWidth!==W||image.naturalHeight!==H)throw Error('Frame dimensions are not 200 × 233.');
+    frame=image;frameLoading=false;
+    say(portrait?'PORTRAIT LOADED // DTR FRAME READY // DOWNLOAD PNG':'DTR FRAME READY // UPLOAD A PORTRAIT');
+    draw();
+  }catch(error){
+    frame=null;frameLoading=false;
+    say('DTR FRAME COULD NOT LOAD // TRY UPDATE NOW OR REFRESH: '+error.message,true);
+    draw();
+  }
 }
 file.addEventListener('change',async()=>{
- const chosen=file.files?.[0];if(!chosen)return;
- if(!/^image\/(png|jpeg|webp)$/.test(chosen.type)){say('USE PNG, JPG OR WEBP.',true);file.value='';return}
- if(chosen.size>15*1024*1024){say('IMAGE MUST BE UNDER 15 MB.',true);file.value='';return}
- const url=URL.createObjectURL(chosen);
- try{
-   const image=await loadImage(url);
-   if(!image.naturalWidth||!image.naturalHeight)throw Error('Invalid dimensions.');
-   portrait=image;
-   if(objectUrl)URL.revokeObjectURL(objectUrl);
-   objectUrl=url;
-   resetTransform();
-   if(frame)say('PORTRAIT LOADED // DRAG TO POSITION // DOWNLOAD PNG');
-   else if(frameLoading)say('PORTRAIT LOADED // WAITING FOR DTR FRAME');
-   else say('PORTRAIT LOADED // DTR FRAME MISSING: USE UPDATE NOW OR REFRESH',true);
- }catch(e){URL.revokeObjectURL(url);say('COULD NOT OPEN IMAGE: '+e.message,true)}
- file.value='';draw();
+  const chosen=file.files?.[0];if(!chosen)return;
+  if(!/^image\/(png|jpeg|webp)$/.test(chosen.type)){say('USE PNG, JPG OR WEBP.',true);file.value='';return;}
+  if(chosen.size>15*1024*1024){say('IMAGE MUST BE UNDER 15 MB.',true);file.value='';return;}
+  const url=URL.createObjectURL(chosen);
+  try{
+    const image=await loadImage(url);
+    if(!image.naturalWidth||!image.naturalHeight)throw Error('Invalid dimensions.');
+    if(image.naturalWidth*image.naturalHeight>60000000)throw Error('Image dimensions are too large.');
+    portrait=image;
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    objectUrl=url;
+    zoom.min=String(MIN_ZOOM);
+    resetTransform();
+    if(frame)say('PORTRAIT LOADED // FIT, FILL, ZOOM OR DRAG // DOWNLOAD PNG');
+    else if(frameLoading)say('PORTRAIT LOADED // WAITING FOR DTR FRAME');
+    else say('PORTRAIT LOADED // DTR FRAME MISSING: USE UPDATE NOW OR REFRESH',true);
+  }catch(error){
+    URL.revokeObjectURL(url);
+    say('COULD NOT OPEN IMAGE: '+error.message,true);
+  }
+  file.value='';draw();
 });
 zoom.addEventListener('input',()=>setZoom(zoom.value));
 reset.addEventListener('click',resetTransform);
-canvas.addEventListener('pointerdown',e=>{
- if(!portrait)return;
- pointer={id:e.pointerId,x:e.clientX,y:e.clientY,startX:offsetX,startY:offsetY};
- canvas.setPointerCapture?.(e.pointerId);
+fit?.addEventListener('click',fitImage);
+fill?.addEventListener('click',resetTransform);
+nudgeButtons.forEach(button=>button.addEventListener('click',()=>{
+  if(!portrait)return;
+  switch(button.dataset.avatarNudge){
+    case 'left':offsetX-=NUDGE;break;
+    case 'right':offsetX+=NUDGE;break;
+    case 'up':offsetY-=NUDGE;break;
+    case 'down':offsetY+=NUDGE;break;
+    default:return;
+  }
+  draw();
+}));
+canvas.addEventListener('pointerdown',event=>{
+  if(!portrait)return;
+  pointer={id:event.pointerId,x:event.clientX,y:event.clientY,startX:offsetX,startY:offsetY};
+  canvas.setPointerCapture?.(event.pointerId);
 });
-canvas.addEventListener('pointermove',e=>{
- if(!pointer||pointer.id!==e.pointerId)return;
- const rect=canvas.getBoundingClientRect();
- offsetX=pointer.startX+(e.clientX-pointer.x)*W/rect.width;
- offsetY=pointer.startY+(e.clientY-pointer.y)*H/rect.height;
- draw();
+canvas.addEventListener('pointermove',event=>{
+  if(!pointer||pointer.id!==event.pointerId)return;
+  const rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  offsetX=pointer.startX+(event.clientX-pointer.x)*W/rect.width;
+  offsetY=pointer.startY+(event.clientY-pointer.y)*H/rect.height;
+  draw();
 });
-const release=e=>{if(pointer?.id===e.pointerId)pointer=null};
+const release=event=>{if(pointer?.id===event.pointerId)pointer=null};
 canvas.addEventListener('pointerup',release);
 canvas.addEventListener('pointercancel',release);
-canvas.addEventListener('wheel',e=>{
- if(!portrait)return;
- e.preventDefault();setZoom(scale+(e.deltaY<0?.1:-.1));
+canvas.addEventListener('wheel',event=>{
+  if(!portrait)return;
+  event.preventDefault();
+  setZoom(scale+(event.deltaY<0?.05:-.05));
 },{passive:false});
 save.addEventListener('click',()=>{
- if(!portrait||!frame)return;
- canvas.toBlob(blob=>{
-   if(!blob){say('EXPORT FAILED. TRY AGAIN.',true);return;}
-   const url=URL.createObjectURL(blob),a=document.createElement('a');
-   a.href=url;a.download='DTR-framed-avatar-200x233.png';
-   document.body.appendChild(a);a.click();a.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),15000);
-   say('EXPORTED // 200 × 233 PNG');
- },'image/png');
+  if(!portrait||!frame)return;
+  canvas.toBlob(blob=>{
+    if(!blob){say('EXPORT FAILED. TRY AGAIN.',true);return;}
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='DTR-framed-avatar-200x233.png';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+    say('EXPORTED // 200 × 233 PNG');
+  },'image/png');
 });
 draw();loadFrame();
 window.addEventListener('pagehide',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl)});
