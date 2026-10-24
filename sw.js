@@ -1,7 +1,7 @@
 /* DTR POB Network · RHW-style offline app shell.
    App assets are available offline. Darkstat telemetry remains network-only. */
 const CACHE_PREFIX='dtr-pob-network-pwa-';
-const CACHE_NAME=`${CACHE_PREFIX}2026-10-24-v1.0.8-help-guide-2`;
+const CACHE_NAME=`${CACHE_PREFIX}2026-10-24-v1.0.8-help-guide-3`;
 const APP_SHELL=[
   './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-calculator.css','./dtr-production.css','./dtr-shipyard.css','./dtr-calculator-mobile.css','./dtr-forum.css','./dtr-avatar.css','./dtr-trade-routes.css','./dtr-ships.css',
   './dtr-pwa.js','./recipe-catalog.js','./app.js','./dtr-procurement-prices.js','./dtr-calculator.js','./dtr-production.js','./dtr-shipyard.js','./dtr-forum.js','./dtr-avatar.js','./dtr-quality.js','./dtr-uplink.js',
@@ -13,7 +13,7 @@ const APP_SHELL=[
   './trade-core/data/navigation.json.gz',
   './assets/favicon-64.png','./assets/apple-touch-icon.png','./assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable-512.png',
   './help/guide.html',
-  ...["./help/img/attention-mode.webp","./help/img/avatar-tool.webp","./help/img/calculator.webp","./help/img/forum-bbcode.webp","./help/img/forum-preview.webp","./help/img/forum-write.webp","./help/img/header-navigation.webp","./help/img/inventory-search.webp","./help/img/inventory.webp","./help/img/mobile-overview.webp","./help/img/mobile-pob.webp","./help/img/network-matrix.webp","./help/img/overview-metrics.webp","./help/img/overview-pob-cards.webp","./help/img/pinned-cargo.webp","./help/img/pob-detail-header.webp","./help/img/pob-maintenance.webp","./help/img/pob-production-invicta.webp","./help/img/pob-production-sanctum.webp","./help/img/pob-production-torrelavega.webp","./help/img/routes-advanced.webp","./help/img/routes-custom-profile.webp","./help/img/routes-flight-plan.webp","./help/img/routes-results-empty.webp","./help/img/routes-ship-deck.webp","./help/img/routes-ship-search.webp","./help/img/shipyard.webp","./help/img/system-panel.webp","./help/img/uplink-panel.webp"]
+  ...["./help/img/attention-mode.webp","./help/img/avatar-tool.webp","./help/img/calculator.webp","./help/img/forum-bbcode.webp","./help/img/forum-preview.webp","./help/img/forum-write.webp","./help/img/header-navigation-help.webp","./help/img/inventory-search.webp","./help/img/inventory.webp","./help/img/mobile-overview.webp","./help/img/mobile-pob.webp","./help/img/network-matrix.webp","./help/img/overview-metrics.webp","./help/img/overview-pob-cards.webp","./help/img/pinned-cargo.webp","./help/img/pob-detail-header.webp","./help/img/pob-maintenance.webp","./help/img/pob-production-invicta.webp","./help/img/pob-production-sanctum.webp","./help/img/pob-production-torrelavega.webp","./help/img/routes-advanced.webp","./help/img/routes-custom-profile.webp","./help/img/routes-flight-plan.webp","./help/img/routes-results-empty.webp","./help/img/routes-ship-deck.webp","./help/img/routes-ship-search.webp","./help/img/shipyard.webp","./help/img/system-panel.webp","./help/img/uplink-panel.webp"]
 ];
 
 self.addEventListener('install',event=>{
