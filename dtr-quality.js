@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '1.0.5', build: '2026.10.31-MOBILE-UI' });
+  const META = Object.freeze({ version: '1.0.6', build: '2026.10.31-QUOTE-COVERAGE' });
   const ATTENTION_KEY = 'trafalgar:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);

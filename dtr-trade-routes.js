@@ -73,11 +73,13 @@
     market.forEach(base=>rows(base).forEach(item=>{
       const commodityKey=key(item);
       if(!commodityKey)return;
-      if(!grouped.has(commodityKey))grouped.set(commodityKey,[]);
-      grouped.get(commodityKey).push({base,buyFromBase:sells(item),sellToBase:buys(item),stock:q(item)});
+      if(!grouped.has(commodityKey))grouped.set(commodityKey,new Map());
+      const byBase=grouped.get(commodityKey),id=baseKey(base),previous=byBase.get(id);
+      const buyFromBase=sells(item),sellToBase=buys(item),stock=q(item);
+      byBase.set(id,{base,buyFromBase:buyFromBase??previous?.buyFromBase??null,sellToBase:sellToBase??previous?.sellToBase??null,stock:stock??previous?.stock??null});
     }));
-    marketIndex=grouped;
-    marketOptions=[...grouped].map(([commodityKey,quotes])=>({key:commodityKey,label:nm(rows(quotes[0].base).find(item=>key(item)===commodityKey))})).sort((a,b)=>a.label.localeCompare(b.label));
+    marketIndex=new Map([...grouped].map(([commodityKey,quotes])=>[commodityKey,[...quotes.values()]]));
+    marketOptions=[...marketIndex].map(([commodityKey,quotes])=>({key:commodityKey,label:nm(rows(quotes[0].base).find(item=>key(item)===commodityKey))})).sort((a,b)=>a.label.localeCompare(b.label));
   }
   const opts=()=>marketOptions;
   const hostFrom=s=>{const found=s?.bases instanceof Map&&s.bases.get('trafalgar-junkyards')||((s?.data||[]).find(b=>n([b?.name,b?.nickname,b?.base_name,b?.display_name].join(' ')).includes('trafalgar junkyards'))||null);return found?{...found,_dtrPob:true}:null;};
@@ -96,11 +98,15 @@
     const chosen=(selected==='all'?options:options.filter(o=>o.key===selected)).filter(o=>!commodityQuery||n(o.label).includes(commodityQuery)), out=[];
     if(chosen.length===1){
       const item=chosen[0], quotes=marketIndex.get(item.key)||[];
-      const quoteByBase=new Map(quotes.map(quote=>[baseKey(quote.base),quote]));
+      const quoteByBase=new Map();
+      for(const quote of quotes){
+        const id=baseKey(quote.base),previous=quoteByBase.get(id);
+        quoteByBase.set(id,{base:quote.base,buyFromBase:quote.buyFromBase??previous?.buyFromBase??null,sellToBase:quote.sellToBase??previous?.sellToBase??null,stock:quote.stock??previous?.stock??null});
+      }
       const baseMap=new Map();
       market.forEach(base=>{const id=baseKey(base);if(id&&!baseMap.has(id))baseMap.set(id,base);});
       const allBaseOptions=[...baseMap.values()].sort((a,b)=>bn(a).localeCompare(bn(b))).map(base=>quoteByBase.get(baseKey(base))||{base,buyFromBase:null,sellToBase:null,stock:null});
-      const dualPriceBases=allBaseOptions.filter(x=>x.buyFromBase!==null&&x.sellToBase!==null),sourceOptions=dualPriceBases,destinationOptions=dualPriceBases;
+      const sourceOptions=allBaseOptions.filter(x=>x.buyFromBase!==null),destinationOptions=allBaseOptions.filter(x=>x.sellToBase!==null);
       if(!sourceOptions.some(x=>baseKey(x.base)===selectedSource))selectedSource='';
       if(!destinationOptions.some(x=>baseKey(x.base)===selectedDestination))selectedDestination='';
       const source=allBaseOptions.find(x=>baseKey(x.base)===selectedSource),destination=allBaseOptions.find(x=>baseKey(x.base)===selectedDestination);
@@ -109,23 +115,23 @@
       const sameBase=!!source&&!!destination&&baseKey(source.base)===baseKey(destination.base);
       const marginText=!source||!destination?'—':!hasSourcePrice||!hasDestinationPrice?'MARGIN UNAVAILABLE':sameBase?'SAME BASE':(destination.sellToBase-source.buyFromBase>0?'+':'')+money(destination.sellToBase-source.buyFromBase);
       const marginHint=!source||!destination?'Choose both bases to calculate':!hasSourcePrice?'Source buy price is not listed':!hasDestinationPrice?'Destination sell price is not listed':sameBase?'Choose two different bases':'Before travel and other costs';
-      const visibleBases=allBaseOptions.filter(x=>x.buyFromBase!==null&&x.sellToBase!==null&&(!baseQuery||n([bn(x.base),loc(x.base)].join(' ')).includes(baseQuery)));
+      const visibleBases=allBaseOptions.filter(x=>(x.buyFromBase!==null||x.sellToBase!==null)&&(!baseQuery||n([bn(x.base),loc(x.base)].join(' ')).includes(baseQuery)));
       const pick='<section class="trade-pick"><h3>SELECT A TRADE</h3><div class="trade-controls"><label>BUY FROM // SOURCE BASE<select id="tradeSourceBase"><option value="">CHOOSE ANY SOURCE BASE</option>'+sourceOptions.map(x=>'<option value="'+esc(baseKey(x.base))+'" '+(baseKey(x.base)===selectedSource?'selected':'')+'>'+esc(bn(x.base))+' // '+money(x.buyFromBase)+(x.stock===null?'':' // STOCK '+x.stock.toLocaleString('en-GB'))+'</option>').join('')+'</select></label><label>SELL TO // DESTINATION BASE<select id="tradeDestinationBase"><option value="">CHOOSE ANY DESTINATION BASE</option>'+destinationOptions.map(x=>'<option value="'+esc(baseKey(x.base))+'" '+(baseKey(x.base)===selectedDestination?'selected':'')+'>'+esc(bn(x.base))+' // '+money(x.sellToBase)+'</option>').join('')+'</select></label></div><div class="trade-pick-grid"><article><small>BUY PRICE // BASE SELLS</small><strong>'+money(source?.buyFromBase??null)+'</strong><small>'+(source?esc(bn(source.base))+(source.stock===null?'':' // STOCK '+source.stock.toLocaleString('en-GB')):'Select a source base')+'</small></article><article><small>SELL PRICE // BASE BUYS</small><strong>'+money(destination?.sellToBase??null)+'</strong><small>'+(destination?esc(bn(destination.base)):'Select a destination base')+'</small></article><article><small>ESTIMATED MARGIN / UNIT</small><strong class="trade-margin">'+marginText+'</strong><small>'+marginHint+'</small></article></div></section>';
-      results.innerHTML=pick+'<div class="trade-empty">This table shows only bases reporting both a base-sell and base-buy price. Source and destination menus include only bases reporting both prices for this commodity. Margin is before travel and other costs. Zero stock means a price is listed but none is available to buy.</div>'+(visibleBases.length?'<div class="trade-wrap"><table class="trade-table trade-quote-table"><thead><tr><th>BASE / LOCATION</th><th>BASE SELLS // BUY PRICE</th><th>BASE BUYS // SELL PRICE</th><th>STOCK</th></tr></thead><tbody>'+visibleBases.map(x=>'<tr><td data-label="BASE / LOCATION"><strong>'+esc(bn(x.base))+'</strong><small>'+esc(loc(x.base))+'</small></td><td data-label="BASE SELLS // BUY PRICE">'+(x.buyFromBase===null?'—':money(x.buyFromBase))+'</td><td data-label="BASE BUYS // SELL PRICE">'+(x.sellToBase===null?'—':money(x.sellToBase))+'</td><td data-label="STOCK">'+(x.stock===null?'—':x.stock.toLocaleString('en-GB'))+'</td></tr>').join('')+'</tbody></table></div>':baseQuery?'<div class="trade-empty">No bases with both prices match that base search.</div>':'<div class="trade-empty">No bases currently report both prices for this commodity.</div>');
+      results.innerHTML=pick+'<div class="trade-empty">This table lists every base with at least one price quote. A dash means no quote was reported in that direction. Buy-from choices require a BASE SELLS quote; sell-to choices require a BASE BUYS quote. Margin is before travel and other costs. Zero stock means a price is listed but none is available to buy.</div>'+(visibleBases.length?'<div class="trade-wrap"><table class="trade-table trade-quote-table"><thead><tr><th>BASE / LOCATION</th><th>BASE SELLS // BUY PRICE</th><th>BASE BUYS // SELL PRICE</th><th>STOCK</th></tr></thead><tbody>'+visibleBases.map(x=>'<tr><td data-label="BASE / LOCATION"><strong>'+esc(bn(x.base))+'</strong><small>'+esc(loc(x.base))+'</small></td><td data-label="BASE SELLS // BUY PRICE">'+(x.buyFromBase===null?'—':money(x.buyFromBase))+'</td><td data-label="BASE BUYS // SELL PRICE">'+(x.sellToBase===null?'—':money(x.sellToBase))+'</td><td data-label="STOCK">'+(x.stock===null?'—':x.stock.toLocaleString('en-GB'))+'</td></tr>').join('')+'</tbody></table></div>':baseQuery?'<div class="trade-empty">No quoted bases match that base search.</div>':'<div class="trade-empty">No bases currently report a buy or sell price for this commodity.</div>');
       panel.querySelector('#tradeSourceBase').addEventListener('change',e=>{selectedSource=e.target.value;paint();});
       panel.querySelector('#tradeDestinationBase').addEventListener('change',e=>{selectedDestination=e.target.value;paint();});
       return;
     }
     chosen.forEach(item=>{
       const quotes=marketIndex.get(item.key)||[];
-      const twoSidedQuotes=quotes.filter(x=>x.buyFromBase!==null&&x.sellToBase!==null);
-      const destinations=twoSidedQuotes.sort((a,b)=>b.sellToBase-a.sellToBase);
-      const sources=twoSidedQuotes;
+      const destinations=quotes.filter(x=>x.sellToBase!==null).sort((a,b)=>b.sellToBase-a.sellToBase);
+      const sources=quotes.filter(x=>x.buyFromBase!==null);
       const matchingDestinations=baseQuery?destinations.filter(x=>n([bn(x.base),loc(x.base)].join(' ')).includes(baseQuery)):destinations;
       let best=null,hasPriceRoute=false;
       sources.forEach(source=>{
         const sourceKey=baseKey(source.base);
-        if(destinations.some(destination=>baseKey(destination.base)!==sourceKey))hasPriceRoute=true;
+        const sourceDestinations=baseQuery&&!n([bn(source.base),loc(source.base)].join(' ')).includes(baseQuery)?matchingDestinations:destinations;
+        if(sourceDestinations.some(destination=>baseKey(destination.base)!==sourceKey))hasPriceRoute=true;
         if(source.stock!==null&&source.stock<=0)return;
         const sourceMatches=baseQuery&&n([bn(source.base),loc(source.base)].join(' ')).includes(baseQuery);
         const candidates=baseQuery&&!sourceMatches?matchingDestinations:destinations;
@@ -134,14 +140,14 @@
         const route={commodity:item.label,from:source.base,to:destination.base,buy:source.buyFromBase,sell:destination.sellToBase,margin:destination.sellToBase-source.buyFromBase,stock:source.stock};
         if(!best||route.margin>best.margin)best=route;
       });
-      if(!best){if(selected!=='all'||commodityQuery||baseQuery)out.push({commodity:item.label,unavailable:true,reason:hasPriceRoute?'No source base reports stock above zero.':'No matching two-sided prices are available.'});}
+      if(!best){if(selected!=='all'||commodityQuery||baseQuery)out.push({commodity:item.label,unavailable:true,reason:hasPriceRoute?'No source base reports stock above zero.':'No buy/sell quote pair is available across two different bases.'});}
       else out.push(best);
     });
     out.sort((a,b)=>(b.margin??-Infinity)-(a.margin??-Infinity));
     if(!out.length){results.innerHTML='<div class="trade-empty">No routes match those search terms. Try another commodity or base name.</div>';return;}
     const compactDefault=selected==='all'&&!commodityQuery&&!baseQuery;
     const shown=compactDefault&&!showAllRoutes?out.slice(0,12):out;
-    results.innerHTML='<div class="trade-empty">'+(baseQuery?'Showing routes that include the searched base; matching alternatives are shown for each commodity.':commodityQuery?'Showing results matching the commodity search.':'Showing the 12 highest-margin available routes. Select a commodity to inspect every quoted base.')+' A route buys where BASE SELLS and sells where BASE BUYS. Only bases with both prices listed are included. Margin is per unit before travel and other costs; stock at the source is shown. Routes with zero recorded source stock are excluded.</div>'+(compactDefault?'<div class="trade-results-bar"><span>SHOWING '+(showAllRoutes?'ALL '+out.length:'TOP '+Math.min(12,out.length))+' AVAILABLE ROUTES</span><button type="button" id="tradeShowAll">'+(showAllRoutes?'SHOW TOP 12':'SHOW ALL '+out.length+' ROUTES')+'</button></div>':'')+'<div class="trade-wrap"><table class="trade-table"><thead><tr><th>COMMODITY</th><th>ROUTE / LOCATION</th><th>BUY AT</th><th>SELL TO</th><th>BUY PRICE</th><th>SELL PRICE</th><th>STOCK AT SOURCE</th><th>MARGIN / UNIT</th></tr></thead><tbody>'+shown.map(x=>x.unavailable?'<tr><td data-label="COMMODITY"><strong>'+esc(x.commodity)+'</strong></td><td data-label="ROUTE STATUS" colspan="7" class="trade-empty">'+esc(x.reason)+'</td></tr>':'<tr><td data-label="COMMODITY"><strong>'+esc(x.commodity)+'</strong></td><td data-label="ROUTE / LOCATION"><strong>'+esc(bn(x.from))+' → '+esc(bn(x.to))+'</strong><small>'+esc(loc(x.from))+' → '+esc(loc(x.to))+'</small></td><td data-label="BUY AT"><strong>'+esc(bn(x.from))+'</strong><small>BASE SELLS</small></td><td data-label="SELL TO"><strong>'+esc(bn(x.to))+'</strong><small>BASE BUYS</small></td><td data-label="BUY PRICE">'+money(x.buy)+'</td><td data-label="SELL PRICE">'+money(x.sell)+'</td><td data-label="STOCK AT SOURCE">'+(x.stock===null?'—':x.stock.toLocaleString('en-GB'))+'</td><td data-label="MARGIN / UNIT"><strong class="trade-margin">'+(x.margin>0?'+':'')+money(x.margin)+'</strong><small>per unit before costs</small></td></tr>').join('')+'</tbody></table></div>';
+    results.innerHTML='<div class="trade-empty">'+(baseQuery?'Showing routes that include the searched base; matching alternatives are shown for each commodity.':commodityQuery?'Showing results matching the commodity search.':'Showing the 12 highest-margin available routes. Select a commodity to inspect every quoted base.')+' A route buys from a base with a BASE SELLS quote and sells to a base with a BASE BUYS quote. The price lookup includes bases with either quote; the route itself needs the correct quote at each end. Margin is per unit before travel and other costs; stock at the source is shown. Routes with zero recorded source stock are excluded.</div>'+(compactDefault?'<div class="trade-results-bar"><span>SHOWING '+(showAllRoutes?'ALL '+out.length:'TOP '+Math.min(12,out.length))+' AVAILABLE ROUTES</span><button type="button" id="tradeShowAll">'+(showAllRoutes?'SHOW TOP 12':'SHOW ALL '+out.length+' ROUTES')+'</button></div>':'')+'<div class="trade-wrap"><table class="trade-table"><thead><tr><th>COMMODITY</th><th>ROUTE / LOCATION</th><th>BUY AT</th><th>SELL TO</th><th>BUY PRICE</th><th>SELL PRICE</th><th>STOCK AT SOURCE</th><th>MARGIN / UNIT</th></tr></thead><tbody>'+shown.map(x=>x.unavailable?'<tr><td data-label="COMMODITY"><strong>'+esc(x.commodity)+'</strong></td><td data-label="ROUTE STATUS" colspan="7" class="trade-empty">'+esc(x.reason)+'</td></tr>':'<tr><td data-label="COMMODITY"><strong>'+esc(x.commodity)+'</strong></td><td data-label="ROUTE / LOCATION"><strong>'+esc(bn(x.from))+' → '+esc(bn(x.to))+'</strong><small>'+esc(loc(x.from))+' → '+esc(loc(x.to))+'</small></td><td data-label="BUY AT"><strong>'+esc(bn(x.from))+'</strong><small>BASE SELLS</small></td><td data-label="SELL TO"><strong>'+esc(bn(x.to))+'</strong><small>BASE BUYS</small></td><td data-label="BUY PRICE">'+money(x.buy)+'</td><td data-label="SELL PRICE">'+money(x.sell)+'</td><td data-label="STOCK AT SOURCE">'+(x.stock===null?'—':x.stock.toLocaleString('en-GB'))+'</td><td data-label="MARGIN / UNIT"><strong class="trade-margin">'+(x.margin>0?'+':'')+money(x.margin)+'</strong><small>per unit before costs</small></td></tr>').join('')+'</tbody></table></div>';
     panel.querySelector('#tradeShowAll')?.addEventListener('click',()=>{showAllRoutes=!showAllRoutes;paint();});
   }
   async function refresh(){
