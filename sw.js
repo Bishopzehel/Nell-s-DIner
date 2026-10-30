@@ -1,10 +1,10 @@
 /* DTR POB Network · RHW-style offline app shell.
    App assets are available offline. Darkstat telemetry remains network-only. */
 const CACHE_PREFIX='trafalgar-pob-control-pwa-';
-const CACHE_NAME=`${CACHE_PREFIX}2026-10-30-v1.0.8-marketwide`;
+const CACHE_NAME=`${CACHE_PREFIX}2026-10-31-v1.0.9-mobile-ui`;
 const APP_SHELL=[
-  './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-calculator.css','./dtr-calculator-mobile.css','./dtr-forum.css',
-  './dtr-pwa.js','./recipe-catalog.js','./app.js','./dtr-procurement-prices.js','./dtr-calculator.js','./dtr-forum.js','./dtr-quality.js','./dtr-uplink.js','./dtr-trade-routes.js?v=marketwide11',
+  './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-mobile.css','./dtr-calculator.css','./dtr-calculator-mobile.css','./dtr-forum.css',
+  './dtr-pwa.js','./recipe-catalog.js','./app.js','./dtr-procurement-prices.js','./dtr-calculator.js','./dtr-forum.js','./dtr-quality.js','./dtr-uplink.js','./dtr-trade-routes.js?v=mobile-ui-1',
   './assets/trafalgar-mark.svg'
 ];
 
@@ -65,3 +65,4 @@ self.addEventListener('fetch',event=>{
 
   if(url.hostname==='fonts.googleapis.com'||url.hostname==='fonts.gstatic.com')event.respondWith(cacheFirst(request));
 });
+
