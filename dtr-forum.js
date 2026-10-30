@@ -4,11 +4,11 @@
   if (window.DTRForum) return;
 
   const KEYS = Object.freeze({
-    current: 'elcano:forum:current:v1',
-    drafts: 'elcano:forum:drafts:v1',
-    identities: 'elcano:forum:identities:v1',
-    lens: 'elcano:forum:lens:v1',
-    personalImageMigrated: 'elcano:forum:personal-image-migrated:v1'
+    current: 'trafalgar:forum:current:v1',
+    drafts: 'trafalgar:forum:drafts:v1',
+    identities: 'trafalgar:forum:identities:v1',
+    lens: 'trafalgar:forum:lens:v1',
+    personalImageMigrated: 'trafalgar:forum:personal-image-migrated:v1'
   });
   const ART = Object.freeze({
     top: '',
