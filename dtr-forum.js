@@ -16,11 +16,11 @@
     footer: ''
   });
   const DEFAULT = Object.freeze({
-    sender: '', role: '', location: '', recipient: '', encryption: '', rightImage: '',
+    sender: '', role: '', location: '', recipient: '', destination: '', encryption: '', rightImage: '',
     subject: '', opening: '', message: '', closing: '', draftName: '',
     topImage: ART.top, leftImage: '', footerImage: ART.footer
   });
-  const COLORS = Object.freeze({line:'#315b70',label:'#d9b66f',gold:'#9fc4d2',text:'#DCDCDC'});
+  const COLORS = Object.freeze({line:'#C47A3A',label:'#C47A3A',gold:'#FF8000',text:'#29251F'});
   const FIELDS = Object.keys(DEFAULT);
   let current = loadObject(KEYS.current, DEFAULT);
   let drafts = loadArray(KEYS.drafts);
@@ -119,40 +119,33 @@
     const sender = fieldValue(s, 'sender') || 'SENDER ID';
     const location = fieldValue(s, 'location') || 'LOCATION';
     const recipient = fieldValue(s, 'recipient') || 'RECIPIENT';
-    const encryption = fieldValue(s, 'encryption') || 'ENCRYPTION';
-    const opening = fieldValue(s, 'opening');
+    const destination = fieldValue(s, 'destination') || 'DESTINATION';
+    const subject = fieldValue(s, 'subject') || 'Transmission subject';
+    const opening = fieldValue(s, 'opening') || 'To whom it may concern,';
     const closing = fieldValue(s, 'closing');
     const role = fieldValue(s, 'role');
-    const body = messageBbcode(s.message.trim());
-    const gold = COLORS.gold;
-    const label = COLORS.label;
-    const line = COLORS.line;
-    const result = ['[font=Montserrat]'];
-
-    if (imgBbcode(s.topImage)) result.push('[align=center]' + imgBbcode(s.topImage) + '[/align]');
-    const left = imgBbcode(s.leftImage, ' float=left');
-    const right = imgBbcode(s.rightImage, ' float=right');
-    if (left || right) result.push(left + right);
-    result.push('[hrc]' + line + '[/hrc][hrc]' + line + '[/hrc][pi amount=25]');
-    [
-      ['Sender ID', sender],
-      ['Location', location],
-      ['Recipient - Encryption', recipient + ' - ' + encryption]
-    ].forEach(entry => {
-      result.push('[color=' + label + '][size=19]' + entry[0] + '[/size][/color]');
-      result.push('[indent][size=13][color=' + gold + ']' + entry[1] + '[/color][/size][/indent]');
-    });
-    result.push('[/pi]', '[hrc]' + line + '[/hrc][hrc]' + line + '[/hrc]');
-    result.push('', '[pi amount=5][color=' + COLORS.text + ']');
-    if (opening) result.push(opening, '');
-    result.push('[indent]', body || 'WRITE YOUR TRANSMISSION HERE', '[/indent]', '');
+    const body = messageBbcode(s.message.trim()) || 'WRITE YOUR TRANSMISSION HERE';
+    const right = safeUrl(s.rightImage);
+    const result = ['[quote="' + sender + '"]'];
+    result.push('[align=center][size=large][b]— TRAFALGAR STATION // JUNKERS OFFICES —[/b][/size]');
+    result.push('[i]Junkers of Trafalgar Station[/i][/align]', '');
+    result.push('[table][tr][td]');
+    result.push('[size=20][b][color=' + COLORS.line + ']TRANSMISSION // PRIORITY REQUEST[/color][/b][/size]', '');
+    result.push('[size=medium][b]From :[/b] [color=#FF8000]' + sender + '[/color][/size]');
+    result.push('[size=medium][b]Station :[/b][color=#FF8000] ' + location + '[/color][/size]');
+    result.push('[size=medium][b]To :[/b][color=#FF8000] ' + recipient + '[/color][/size]');
+    result.push('[size=medium][b]Destination :[/b] [color=#FF8000]' + destination + '[/color][/size]', '');
+    result.push('[size=large][b]Subject :[/b][/size] [size=medium][color=#FF8040][b][u]' + subject + '[/u][/b][/color][/size]');
+    result.push('[/td]');
+    if (right) result.push('[td][align=right][img]' + right + '[/img]' + '[br][size=small][i]' + sender + '[/i][/size][/align][/td]');
+    result.push('[/tr][/table]', '', '[hr]', '', opening, '', body, '');
+    result.push('[hr]', '');
     if (closing) result.push(closing, '');
-    result.push('[align=right]');
-    if (role) result.push(role);
-    result.push('[i][b]' + sender + '[/b][/i]', '[/align]', '[/color]', '[/pi]', '');
-    if (imgBbcode(s.footerImage)) result.push('[align=center]' + imgBbcode(s.footerImage) + '[/align]');
-    result.push('[/font]');
-    return result.join('\n');
+    if (role) result.push('[i]' + role + '[/i]', '');
+    result.push('[i]Available via station communications[/i]', '');
+    result.push('[align=center][size=small][i]“Nothing useful stays lost forever.”[/i][/size][/align]');
+    result.push('[/quote]');
+    return result.join('\\n');
   }
   function inlinePreview(raw) {
     let html = esc(raw);
