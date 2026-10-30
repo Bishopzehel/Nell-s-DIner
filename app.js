@@ -10,16 +10,16 @@
   const STALE_DANGER_MS = 60 * 60 * 1000;
 
   const KEYS = Object.freeze({
-    live: 'elcano:pobs:live:v1',
-    previous: 'elcano:pobs:previous:v1',
-    legacyWatch: 'elcano:watchlist:v1',
-    pins: 'elcano:pob-pins:v1',
-    view: 'elcano:view:v1',
-    recoveries: 'elcano:storage-recoveries:v1'
+    live: 'trafalgar:pobs:live:v1',
+    previous: 'trafalgar:pobs:previous:v1',
+    legacyWatch: 'trafalgar:watchlist:v1',
+    pins: 'trafalgar:pob-pins:v1',
+    view: 'trafalgar:view:v1',
+    recoveries: 'trafalgar:storage-recoveries:v1'
   });
 
   const POBS = Object.freeze([
-    { key: 'elcano-manufacturing-complex', short: 'ELCANO', label: 'Elcano Manufacturing Complex', aliases: ['elcano manufacturing complex', 'elcano_manufacturing_complex'] }
+    { key: 'trafalgar-junkyards', short: 'TRAFALGAR', label: 'Trafalgar Junkyards', aliases: ['trafalgar junkyards', 'trafalgar_junkyards'] }
   ]);
 
   const MAINT = Object.freeze([
@@ -158,7 +158,7 @@
 
   function recoverMalformedJson(key, raw) {
     const at = Date.now();
-    const backupKey = `elcano:recovery:${at}:${key.replace(/[^a-z0-9]+/gi, '-')}`;
+    const backupKey = `trafalgar:recovery:${at}:${key.replace(/[^a-z0-9]+/gi, '-')}`;
     try {
       localStorage.setItem(backupKey, JSON.stringify({
         schemaVersion: 1,
@@ -964,7 +964,7 @@
   }
 
   function storageCheck() {
-    const key = `elcano:probe:${Date.now()}`;
+    const key = `trafalgar:probe:${Date.now()}`;
     try {
       localStorage.setItem(key, 'ok');
       const ready = localStorage.getItem(key) === 'ok';
