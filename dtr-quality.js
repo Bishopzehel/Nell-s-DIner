@@ -75,7 +75,9 @@
         short: pob.key === 'fort-torrelavega' ? 'TORRE' : pob.short,
         label: pob.label
       })),
-      { view: 'forum', index: String(configured.length + 2).padStart(2, '0'), short: 'FORUM', label: 'Forum transmission composer' }
+      { view: 'calculator', index: String(configured.length + 1).padStart(2, '0'), short: 'CALC', label: 'Recipe cost calculator' },
+      { view: 'forum', index: String(configured.length + 2).padStart(2, '0'), short: 'FORUM', label: 'Forum transmission composer' },
+      { view: 'trade-routes', index: String(configured.length + 3).padStart(2, '0'), short: 'TRADE', label: 'Trade Route Finder' }
     ];
   }
 
@@ -422,3 +424,4 @@
     init();
   }
 })();
+
