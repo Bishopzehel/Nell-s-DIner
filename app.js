@@ -28,7 +28,7 @@
     { key: 'consumer goods', label: 'Consumer Goods', code: 'GOODS' }
   ]);
 
-  const VALID_VIEWS = new Set(['overview', 'calculator', 'forum', ...POBS.map(pob => pob.key)]);
+  const VALID_VIEWS = new Set(['overview', 'calculator', 'forum', 'trade-routes', ...POBS.map(pob => pob.key)]);
   const numberFormat = new Intl.NumberFormat(LOCALE);
   const $ = id => document.getElementById(id);
   const E = {
@@ -822,11 +822,14 @@
     renderOverview();
     const calculator = view === 'calculator';
     const forum = view === 'forum';
-    const detail = view !== 'overview' && !calculator && !forum;
+    const tradeRoutes = view === 'trade-routes';
+    const detail = view !== 'overview' && !calculator && !forum && !tradeRoutes;
     E.overview.hidden = view !== 'overview';
     E.calculator.hidden = !calculator;
     E.forum.hidden = !forum;
     E.detail.hidden = !detail;
+    const routeView = document.getElementById('tradeRoutesView');
+    if (routeView) routeView.hidden = !tradeRoutes;
     E.tabs.querySelectorAll('.tab').forEach(button => {
       const active = button.dataset.view === view;
       button.classList.toggle('active', active);
