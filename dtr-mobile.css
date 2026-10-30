@@ -1,0 +1,142 @@
+/* Mobile touch and layout refinements shared by every Trafalgar workspace. */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 58px;
+}
+
+button,
+select,
+input,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 680px) {
+  html,
+  body {
+    min-width: 320px;
+  }
+
+  .topbar,
+  .tabs,
+  .command-frame,
+  footer {
+    width: calc(100% - 16px);
+  }
+
+  .brand-shell,
+  .brand-copy,
+  .brand-copy h1 {
+    min-width: 0;
+  }
+
+  .brand-copy h1 {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    white-space: normal;
+  }
+
+  .brand-main,
+  .brand-slash,
+  .brand-sub {
+    line-height: 1;
+  }
+
+  .tabs {
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 8px;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    min-height: 46px;
+    scroll-snap-align: start;
+  }
+
+  .command-frame {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .network-hero h2,
+  .base-hero h2,
+  .section-head h3,
+  .inventory-head h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .base-card,
+  .maintenance-card,
+  .stat-card,
+  .network-metrics article,
+  .watch-card {
+    min-width: 0;
+  }
+
+  .section-head,
+  .inventory-head {
+    gap: 10px;
+  }
+
+  .inventory-tools,
+  .inventory-tools > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .search input,
+  .dtr-forum-field input,
+  .dtr-forum-field select,
+  .dtr-forum-field textarea,
+  .dtr-forum-actions select,
+  .dtr-forum-code {
+    font-size: 16px;
+  }
+
+  .system-overlay {
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .system-sheet {
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  footer {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 390px) {
+  .command-frame {
+    padding-inline: 7px;
+  }
+
+  .topbar,
+  .tabs,
+  .command-frame,
+  footer {
+    width: calc(100% - 12px);
+  }
+
+  .base-card-footer {
+    flex-wrap: wrap;
+  }
+
+  .section-head.compact {
+    align-items: flex-start;
+  }
+
+  .freshness-chip,
+  .facility-state,
+  .alert-count,
+  .watch-count {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs {
+    scroll-behavior: auto;
+  }
+}
+
