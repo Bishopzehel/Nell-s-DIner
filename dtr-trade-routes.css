@@ -176,3 +176,32 @@
  #detailView .compact-stats .stat-card>strong{font-size:clamp(1rem,4.4vw,1.32rem);overflow-wrap:anywhere}
 }
 @media(max-width:380px){.dtr-routes-fields{grid-template-columns:1fr}.dtr-routes-wide{grid-column:auto}}
+
+/* Two-sided commodity market lookup, integrated above the ship-aware route planner. */
+.dtr-market-lookup{margin:18px 0 22px;border:1px solid rgba(157,48,57,.45);background:rgba(7,6,8,.94);color:var(--text)}
+.dtr-market-lookup-head{display:flex;align-items:end;justify-content:space-between;gap:18px;padding:16px 18px;border-bottom:1px solid rgba(157,48,57,.28);background:linear-gradient(100deg,rgba(157,48,57,.12),transparent 70%)}
+.dtr-market-lookup-head small,.dtr-market-lookup-controls label>span,.dtr-market-lookup-cards small{color:var(--gold);font:700 .66rem "Oxanium",sans-serif;letter-spacing:.08em}
+.dtr-market-lookup-head h3{margin:5px 0 0;color:var(--gold);font:600 1.15rem "Oxanium",sans-serif}
+.dtr-market-lookup-head p{max-width:560px;margin:0;color:#a99ca3;font:.72rem/1.6 "Manrope",sans-serif}
+.dtr-market-lookup-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:15px 18px;border-bottom:1px solid rgba(157,48,57,.2)}
+.dtr-market-lookup-controls label{display:grid;gap:6px;min-width:0}
+.dtr-market-lookup-controls input,.dtr-market-lookup-controls select{width:100%;min-height:42px;padding:0 11px;border:1px solid rgba(157,48,57,.48);border-radius:0;background:#100d10;color:#f4e8d6;font:500 .78rem "Manrope",sans-serif}
+.dtr-market-lookup-controls input::placeholder{color:#988b95}
+.dtr-market-lookup-controls input:focus,.dtr-market-lookup-controls select:focus{outline:2px solid var(--red-bright);outline-offset:1px}
+.dtr-market-lookup-results{padding:14px 18px}
+.dtr-market-lookup-results>p{margin:0;color:#a99ca3;font:.72rem/1.55 "Manrope",sans-serif}
+.dtr-market-lookup-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dtr-market-lookup-cards article{display:grid;gap:5px;min-width:0;padding:12px;border:1px solid rgba(189,70,82,.28);background:rgba(17,13,15,.9)}
+.dtr-market-lookup-cards article strong{color:#f4e8d6;font:600 1.1rem "Oxanium",sans-serif}
+.dtr-market-lookup-cards article span{overflow-wrap:anywhere;color:#a99ca3;font:.68rem "Manrope",sans-serif}
+.dtr-market-lookup-cards .dtr-market-margin{color:#82caa1}
+.dtr-market-lookup-note{margin:12px 0!important}
+.dtr-market-lookup-table-wrap{overflow:auto;border:1px solid rgba(157,48,57,.24)}
+.dtr-market-lookup-table-wrap table{width:100%;min-width:620px;border-collapse:collapse;text-align:left}
+.dtr-market-lookup-table-wrap th{padding:9px 11px;background:rgba(157,48,57,.14);color:var(--gold);font:700 .62rem "Oxanium",sans-serif;letter-spacing:.05em}
+.dtr-market-lookup-table-wrap td{padding:9px 11px;border-top:1px solid rgba(255,255,255,.07);color:#eee4e9;font:.72rem "Manrope",sans-serif}
+.dtr-market-lookup-table-wrap tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.dtr-market-lookup-table-wrap td strong,.dtr-market-lookup-table-wrap td small{display:block}
+.dtr-market-lookup-table-wrap td strong{color:#f4e8d6}
+.dtr-market-lookup-table-wrap td small{margin-top:3px;color:#a99ca3;font:.62rem "Manrope",sans-serif}
+@media(max-width:700px){.dtr-market-lookup-head{display:block}.dtr-market-lookup-head p{margin-top:8px}.dtr-market-lookup-controls{grid-template-columns:1fr}.dtr-market-lookup-cards{grid-template-columns:1fr}}

@@ -54,6 +54,21 @@
         </form>
       </section>
       <p class="dtr-routes-speed-note"><span>DOCKING RESTRICTIONS USE YOUR SELECTED SHIP TYPE</span><span>TRADELANES // 2,500 M/S</span><span>ROUTE TIMES ARE ESTIMATES</span></p>
+      <section class="dtr-market-lookup" aria-labelledby="dtrMarketLookupTitle">
+        <header class="dtr-market-lookup-head">
+          <div><small>MARKET INTELLIGENCE // TWO-SIDED PRICES</small><h3 id="dtrMarketLookupTitle">Commodity Price Lookup</h3></div>
+          <p>Search a commodity to see bases that report both prices. Compare the buy and sell price, then estimate per-unit margin.</p>
+        </header>
+        <div class="dtr-market-lookup-controls">
+          <label><span>COMMODITY // SEARCH OR SELECT</span><input id="dtrMarketCommodity" list="dtrMarketCommodityOptions" placeholder="Type or select a commodity…" autocomplete="off"><datalist id="dtrMarketCommodityOptions"></datalist></label>
+          <label><span>FILTER BASES</span><input id="dtrMarketBaseSearch" type="search" placeholder="Search base or system…" autocomplete="off"></label>
+          <label><span>BUY FROM // BASE SELLS</span><select id="dtrMarketSource"><option value="">SELECT SOURCE BASE</option></select></label>
+          <label><span>SELL TO // BASE BUYS</span><select id="dtrMarketDestination"><option value="">SELECT DESTINATION BASE</option></select></label>
+        </div>
+        <div class="dtr-market-lookup-results" id="dtrMarketLookupResults" aria-live="polite">
+          <p>Select a commodity to list bases with both prices.</p>
+        </div>
+      </section>
       <div class="dtr-routes-workspace">
         <section class="dtr-routes-controls" aria-label="Configure trade route search">
           <header><small>01 // ROUTE PARAMETERS</small><strong>FLIGHT PLAN</strong></header>

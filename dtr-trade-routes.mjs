@@ -22,6 +22,7 @@ let startId='',startPreferredId='',startTouched=false,worker=null,results=[],las
 let access=null,requests=0,detailIndex=-1,loadedAt=0,pickerTimer=0;
 let pobLoadedAt=0,marketInFlight=null,pobRefreshInFlight=null,preparingSearch=false,pobRefreshError='';
 let idLoadedAt=0,idDataMode='none',ownerDataMode='none';
+let marketLookupCommodity='',marketLookupQuery='',marketLookupBaseQuery='',marketLookupSource='',marketLookupDestination='';
 const availableRoutes=()=>window.DTRApp?.getState?.()?.view==='trade-routes';
 
 function readPreferences(){
@@ -308,12 +309,59 @@ async function loadPobMarket(){
     return false;
   }finally{clearTimeout(timeout);}
 }
+function marketLookupGoods(){
+  const goods=new Map();
+  for(const base of dataset?.bases||[])for(const offer of base.offers||[]){
+    if(!(Number(offer.buy)>0&&Number(offer.sell)>0))continue;
+    if(!goods.has(offer.id))goods.set(offer.id,{id:offer.id,name:offer.name||offer.id});
+  }
+  return [...goods.values()].sort((a,b)=>a.name.localeCompare(b.name));
+}
+function marketLookupNormalize(value){return String(value??'').toLowerCase().trim();}
+function renderCommodityLookup(){
+  const input=$('dtrMarketCommodity'),list=$('dtrMarketCommodityOptions'),baseSearch=$('dtrMarketBaseSearch'),sourceSelect=$('dtrMarketSource'),destinationSelect=$('dtrMarketDestination'),output=$('dtrMarketLookupResults');
+  if(!input||!list||!baseSearch||!sourceSelect||!destinationSelect||!output)return;
+  const goods=marketLookupGoods();
+  list.innerHTML=goods.map(good=>'<option value="'+escape(good.name)+'"></option>').join('');
+  const chosenGood=goods.find(good=>good.id===marketLookupCommodity);
+  if(marketLookupCommodity&&!chosenGood)marketLookupCommodity='';
+  input.value=chosenGood?.name||marketLookupQuery;
+  if(!dataset){output.innerHTML='<p>Waiting for live market data.</p>';return;}
+  if(!marketLookupCommodity){
+    if(marketLookupQuery){
+      const count=goods.filter(good=>marketLookupNormalize(good.name).includes(marketLookupNormalize(marketLookupQuery))).length;
+      output.innerHTML='<p>'+(count?'Choose an exact commodity from the suggestions. '+qty(count)+' match'+(count===1?'':'es')+' found.':'No two-sided price data matches that commodity search.')+'</p>';
+    }else output.innerHTML='<p>Select a commodity to list bases with both prices.</p>';
+    sourceSelect.innerHTML='<option value="">SELECT SOURCE BASE</option>';destinationSelect.innerHTML='<option value="">SELECT DESTINATION BASE</option>';
+    return;
+  }
+  const baseQuery=marketLookupNormalize(marketLookupBaseQuery);
+  const eligible=(dataset.bases||[]).map(base=>({base,offer:(base.offers||[]).find(offer=>offer.id===marketLookupCommodity)}))
+    .filter(row=>row.offer&&Number(row.offer.buy)>0&&Number(row.offer.sell)>0)
+    .sort((a,b)=>a.base.name.localeCompare(b.base.name));
+  const visible=eligible.filter(({base})=>!baseQuery||marketLookupNormalize([base.name,base.systemName,base.system].join(' ')).includes(baseQuery));
+  if(!visible.some(row=>row.base.id===marketLookupSource))marketLookupSource='';
+  if(!visible.some(row=>row.base.id===marketLookupDestination))marketLookupDestination='';
+  const option=(row,kind)=>'<option value="'+escape(row.base.id)+'" '+(row.base.id===(kind==='source'?marketLookupSource:marketLookupDestination)?'selected':'')+'>'+escape(row.base.name)+' // '+cash(kind==='source'?row.offer.buy:row.offer.sell)+(kind==='source'&&Number.isFinite(row.offer.stock)?' // STOCK '+qty(row.offer.stock):'')+'</option>';
+  sourceSelect.innerHTML='<option value="">SELECT SOURCE BASE</option>'+visible.map(row=>option(row,'source')).join('');
+  destinationSelect.innerHTML='<option value="">SELECT DESTINATION BASE</option>'+visible.map(row=>option(row,'destination')).join('');
+  const source=visible.find(row=>row.base.id===marketLookupSource),destination=visible.find(row=>row.base.id===marketLookupDestination);
+  let margin='—',hint='Choose both bases to calculate';
+  if(source&&destination&&source.base.id===destination.base.id){margin='SAME BASE';hint='Choose two different bases';}
+  else if(source&&destination){const value=destination.offer.sell-source.offer.buy;margin=(value>0?'+':'')+cash(value);hint='Per unit before travel and other costs';}
+  const cards='<div class="dtr-market-lookup-cards"><article><small>BUY PRICE // BASE SELLS</small><strong>'+(source?cash(source.offer.buy):'—')+'</strong><span>'+(source?escape(source.base.name):'Choose a source base')+'</span></article><article><small>SELL PRICE // BASE BUYS</small><strong>'+(destination?cash(destination.offer.sell):'—')+'</strong><span>'+(destination?escape(destination.base.name):'Choose a destination base')+'</span></article><article><small>ESTIMATED MARGIN / UNIT</small><strong class="dtr-market-margin">'+margin+'</strong><span>'+hint+'</span></article></div>';
+  const note=baseQuery?'Showing '+qty(visible.length)+' of '+qty(eligible.length)+' bases with both prices.':'Showing '+qty(visible.length)+' bases with both prices for '+escape(chosenGood.name)+'.';
+  const table=visible.length?'<div class="dtr-market-lookup-table-wrap"><table><thead><tr><th>BASE / SYSTEM</th><th>BASE SELLS // BUY PRICE</th><th>BASE BUYS // SELL PRICE</th><th>STOCK</th></tr></thead><tbody>'+visible.map(row=>'<tr><td><strong>'+escape(row.base.name)+'</strong><small>'+escape(row.base.systemName||row.base.system||'Location not reported')+'</small></td><td>'+cash(row.offer.buy)+'</td><td>'+cash(row.offer.sell)+'</td><td>'+qty(row.offer.stock)+'</td></tr>').join('')+'</tbody></table></div>':'<p>'+(baseQuery?'No bases with both prices match that base or system search.':'No bases currently report both prices for this commodity.')+'</p>';
+  output.innerHTML=cards+'<p class="dtr-market-lookup-note">'+note+' Both prices must be available at a base for it to appear in this lookup.</p>'+table;
+}
 function renderSource(){
   $('dtrRoutesSource').textContent=!dataset?'AWAITING LIVE MARKET DATA // '+(navigation?'ROUTE MAP READY':'LOADING NAVIGATION'):
     (dataMode==='live'?'LIVE DARKSTAT FEED':'CACHED SNAPSHOT')+' // '+qty(dataset.bases.length)+' BASES // '+dateText(dataset.asOf)+
     ' // '+(navigation?qty(navigation.nodes.length)+' NAV POINTS · LANES 2,500 M/S':'NAVIGATION UNAVAILABLE')+
     ($('dtrRoutesCorsair').checked?' // ID RULES '+(idLoadedAt?dateText(idLoadedAt):'DATE UNKNOWN'):'')+
     ($('dtrRoutesPobs').checked?' // POB SNAPSHOT '+(pobLoadedAt?dateText(pobLoadedAt):'UNKNOWN')+(pobMarketStale()?' · OLDER THAN 5 MIN':''):'');
+
+  renderCommodityLookup();
 }
 function readParams(){
   if(!isReady())throw Error('Wait for the live market and navigation map.');
@@ -584,6 +632,15 @@ function closeDialog(id){
 function bind(){
   restorePreferences();
   $('dtrRoutesForm').addEventListener('submit',e=>{e.preventDefault();runSearch();});
+  $('dtrMarketCommodity').addEventListener('input',e=>{
+    marketLookupQuery=e.target.value;
+    const term=marketLookupNormalize(marketLookupQuery),match=marketLookupGoods().find(good=>marketLookupNormalize(good.name)===term||marketLookupNormalize(good.id)===term);
+    marketLookupCommodity=match?.id||'';marketLookupSource='';marketLookupDestination='';renderCommodityLookup();
+  });
+  $('dtrMarketBaseSearch').addEventListener('input',e=>{marketLookupBaseQuery=e.target.value;marketLookupSource='';marketLookupDestination='';renderCommodityLookup();});
+  $('dtrMarketSource').addEventListener('change',e=>{marketLookupSource=e.target.value;renderCommodityLookup();});
+  $('dtrMarketDestination').addEventListener('change',e=>{marketLookupDestination=e.target.value;renderCommodityLookup();});
+
   $('dtrRoutesStartPicker').addEventListener('click',openPicker);
   $('dtrRoutesPickerSearch').addEventListener('input',e=>{clearTimeout(pickerTimer);pickerTimer=setTimeout(()=>renderPicker(e.target.value),110)});
   $('dtrRoutesRefresh').addEventListener('click',marketRefresh);
@@ -599,6 +656,7 @@ function bind(){
     if(close&&close.dataset.routeClose!=='dtrRoutesShipDialog')closeDialog(close.dataset.routeClose);
   });
   $('tradeRoutesView').addEventListener('change',e=>{
+    if(e.target.id==='dtrMarketSource'||e.target.id==='dtrMarketDestination')return;
     if(e.target.id==='dtrRoutesSort'){
       savePreferences();
       if(!busy)renderResults();
@@ -611,7 +669,7 @@ function bind(){
     refreshControls();savePreferences();
   });
   $('tradeRoutesView').addEventListener('input',e=>{
-    if(e.target.id==='dtrRoutesPickerSearch'||e.target.id==='dtrRoutesShipSearch')return;
+    if(e.target.id==='dtrRoutesPickerSearch'||e.target.id==='dtrRoutesShipSearch'||e.target.id==='dtrMarketCommodity'||e.target.id==='dtrMarketBaseSearch')return;
     if(e.target.id==='dtrRoutesCargo')markResultsStale();
     refreshControls();
   });
