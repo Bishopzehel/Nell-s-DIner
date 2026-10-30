@@ -3,7 +3,7 @@
   'use strict';
   if (window.DTRQuality) return;
 
-  const META = Object.freeze({ version: '1.0.3', build: '2026.10.30-TRAFALGAR-INVENTORY' });
+  const META = Object.freeze({ version: '1.0.4', build: '2026.10.30-TRAFALGAR-DEDUPE' });
   const ATTENTION_KEY = 'trafalgar:attention:v1';
   const runtimeEvents = [];
   const $ = id => document.getElementById(id);
