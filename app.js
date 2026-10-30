@@ -745,7 +745,8 @@
     }
     const query = norm(E.search.value);
     const pinned = new Set(pinsFor(view).map(entry => entry.key));
-    let list = items(base);
+    // The telemetry feed can repeat an identical commodity record. Keep one canonical row per commodity name.
+    let list = [...new Map(items(base).map(item => [itemKey(item), item])).values()];
     list = list.filter(item => {
       const key = itemKey(item);
       if (query && !key.includes(query)) return false;
