@@ -54,6 +54,24 @@ textarea {
     scroll-snap-align: start;
   }
 
+  .dtr-mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    gap: 4px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dtr-mobile-nav > button {
+    flex: 1 0 62px;
+    max-width: 132px;
+    scroll-snap-align: center;
+    touch-action: manipulation;
+  }
+
   .command-frame {
     padding-bottom: calc(24px + env(safe-area-inset-bottom));
   }
