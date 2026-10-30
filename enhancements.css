@@ -26,8 +26,8 @@
   position: relative;
   height: 8px;
   overflow: hidden;
-  background: #1a1416;
-  border: 1px solid rgba(157, 48, 57, 0.16);
+  background: #21170f;
+  border: 1px solid rgba(190, 91, 42, 0.16);
 }
 
 .stock-track > i {
@@ -45,7 +45,7 @@
   width: 2px;
   translate: -1px 0;
   background: var(--gold);
-  box-shadow: 0 0 5px rgba(200, 174, 130, 0.45);
+  box-shadow: 0 0 5px rgba(214, 166, 93, 0.45);
 }
 
 .stock-level[data-tone="warn"] .stock-track > i {
@@ -57,7 +57,7 @@
 }
 
 .stock-level[data-tone="muted"] .stock-track > i {
-  background: #4a4246;
+  background: #5b4b3c;
 }
 
 .stock-level.compact {
