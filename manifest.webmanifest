@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Elcano POB Control",
-  "short_name": "Elcano Control",
-  "description": "Live operations, reserves and inventory for Elcano Manufacturing Complex.",
+  "name": "Trafalgar POB Control",
+  "short_name": "Trafalgar Control",
+  "description": "Live operations, reserves and inventory for Trafalgar Junkyards.",
   "lang": "en-GB",
   "start_url": "./",
   "scope": "./",
@@ -21,13 +21,13 @@
   ],
   "icons": [
     {
-      "src": "./assets/elcano-mark.svg",
+      "src": "./assets/trafalgar-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./assets/elcano-mark.svg",
+      "src": "./assets/trafalgar-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"
