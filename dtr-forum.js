@@ -195,31 +195,27 @@
   function previewMarkup(raw = current) {
     const s = cleanState(raw);
     const rows = [
-      ['Sender ID', s.sender || 'SENDER ID'],
-      ['Location', s.location || 'LOCATION'],
-      ['Recipient - Encryption', (s.recipient || 'RECIPIENT') + ' - ' + (s.encryption || 'ENCRYPTION')]
+      ['From :', s.sender || 'SENDER ID'],
+      ['Station :', s.location || 'LOCATION'],
+      ['To :', s.recipient || 'RECIPIENT'],
+      ['Destination :', s.destination || 'DESTINATION']
     ];
-    return '<article class="dtr-forum-render">' +
-      '<div class="dtr-forum-preview-art">' +
-        picture(s.topImage,'dtr-forum-preview-logo','Corsair transmission banner') +
-      '</div>' +
-      '<div class="dtr-forum-rules"></div>' +
-      '<div class="dtr-forum-preview-header">' +
-        '<div class="dtr-forum-preview-portrait-slot">' + picture(s.leftImage,'dtr-forum-preview-portrait','Sender character portrait') + '</div>' +
-        '<div class="dtr-forum-preview-meta">' + rows.map(row => '<div><strong>' + esc(row[0]) + '</strong><span>' + esc(row[1]) + '</span></div>').join('') + '</div>' +
-        '<div class="dtr-forum-preview-crest-slot">' + picture(s.rightImage,'dtr-forum-preview-crest','Optional right-side image') + '</div>' +
-      '</div>' +
-      '<div class="dtr-forum-rules"></div>' +
-      '<div class="dtr-forum-preview-message">' +
-        (s.opening.trim() ? '<p class="dtr-forum-opening">' + inlinePreview(s.opening) + '</p>' : '') +
+    return '<article class="dtr-forum-render dtr-trafalgar-template">' +
+      '<header class="dtr-template-title"><strong>— TRAFALGAR STATION // JUNKERS OFFICES —</strong><em>Junkers of Trafalgar Station</em></header>' +
+      '<div class="dtr-template-letterhead">' +
+        '<div class="dtr-template-details"><h3>TRANSMISSION // PRIORITY REQUEST</h3>' +
+        rows.map(row => '<p><b>' + esc(row[0]) + '</b> <span>' + esc(row[1]) + '</span></p>').join('') +
+        '<p class="dtr-template-subject"><b>Subject :</b> <u>' + esc(s.subject || 'Transmission subject') + '</u></p></div>' +
+        '<div class="dtr-template-portrait">' + picture(s.rightImage,'dtr-forum-preview-crest','Sender character portrait') + '<small>' + esc(s.sender || 'SENDER ID') + '</small></div>' +
+      '</div><hr><div class="dtr-forum-preview-message">' +
+        '<p class="dtr-forum-opening">' + inlinePreview(s.opening.trim() || 'To whom it may concern,') + '</p>' +
         '<div class="dtr-forum-preview-indented">' + previewBody(s.message) + '</div>' +
         '<div class="dtr-forum-preview-signoff">' +
           (s.closing.trim() ? '<p>' + esc(s.closing) + '</p>' : '') +
-          '<span>' + esc(s.role) + '</span><strong><em>' + esc(s.sender || 'SENDER ID') + '</em></strong>' +
-        '</div>' +
-      '</div>' +
-      picture(s.footerImage, 'dtr-forum-preview-footer', 'Corsair footer') +
-      '</article>';
+          (s.role.trim() ? '<span>' + esc(s.role) + '</span>' : '') +
+          '<strong><em>' + esc(s.sender || 'SENDER ID') + '</em></strong><span>Available via station communications</span>' +
+        '</div><hr><p class="dtr-template-motto">“Nothing useful stays lost forever.”</p>' +
+      '</div></article>';
   }
   function status(text, tone='good') {
     const node = $('dtrForumStatus');
