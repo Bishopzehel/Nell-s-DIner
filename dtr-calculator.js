@@ -3,8 +3,8 @@
   'use strict';
 
   const CATALOG = window.DTR_RECIPE_CATALOG;
-  const STORAGE_KEY = 'elcano:calculator:v1';
-  const DEFAULT_POB = 'elcano-manufacturing-complex';
+  const STORAGE_KEY = 'trafalgar:calculator:v1';
+  const DEFAULT_POB = 'trafalgar-junkyards';
   const EXOTIC_COMPONENT_ID = 'commodity_ship_part_exotic';
   const INVICTA_SHIPYARD_RECIPES = new Set([
     'ship_assembly_dsy_venator',
@@ -254,8 +254,8 @@
     const pobs = window.DTRApp?.POBS || [];
     return pobs.find(pob => pob.key === state.pobKey) || pobs[0] || {
       key: DEFAULT_POB,
-      short: 'ELCANO',
-      label: 'Elcano Manufacturing Complex'
+      short: 'TRAFALGAR',
+      label: 'Trafalgar Junkyards'
     };
   }
 
@@ -539,7 +539,7 @@
 
   function renderNoMatch(matches) {
     const pobs = pobOptions();
-    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG?.meta?.recipeCount)}"><div><p class="section-kicker">ELCANO PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
+    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG?.meta?.recipeCount)}"><div><p class="section-kicker">TRAFALGAR PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
       <section class="calculator-controls"><div class="calculator-section-head"><div><span>01</span><strong>RECIPE + POB</strong></div><small>${fmt(CATALOG?.meta?.recipeCount)} MASTER RECIPES</small></div><div class="calculator-form-grid">
         <label class="calculator-field calculator-wide"><span>SEARCH RECIPE</span><input id="calculatorRecipeSearch" type="search" value="${esc(state.search)}" placeholder="REACTOR, JUMP DRIVE, HULL…" autocomplete="off"><small>TYPE A PRODUCT NAME OR RECIPE ID</small></label>
         <label class="calculator-field calculator-wide"><span>SELECTED RECIPE</span><select id="calculatorRecipeSelect">${recipeOptions(matches, '')}</select><small>0 MATCHES</small></label>
@@ -579,7 +579,7 @@
       ? 'MANUAL PRICES NOT SAVED // STORAGE UNAVAILABLE'
       : `${invictaExoticValuation ? 'EXOTIC = BASE SELLS // ' : ''}${overrideCount ? `${overrideCount} SAVED MANUAL // ` : ''}EDIT UNIT PRICES BELOW`;
 
-    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG.meta.recipeCount)}"><div><p class="section-kicker">ELCANO PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
+    root.innerHTML = `<header class="calculator-heading" data-recipe-count="${fmt(CATALOG.meta.recipeCount)}"><div><p class="section-kicker">TRAFALGAR PROCUREMENT // DISCOVERY RECIPES</p><h2>Recipe Cost Calculator</h2><p>LIVE POB PRICES + MANUAL OVERRIDES // MISSING VALUES STAY UNKNOWN</p></div><button type="button" data-calculator-action="overview">BACK TO NETWORK</button></header>
       <section class="calculator-controls">
         <div class="calculator-section-head"><div><span>01</span><strong>RECIPE + POB</strong></div><small>${fmt(CATALOG.meta.recipeCount)} MASTER RECIPES</small></div>
         <div class="calculator-form-grid">
