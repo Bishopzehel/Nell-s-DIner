@@ -1,11 +1,11 @@
 /* DTR POB Network · RHW-style offline app shell.
    App assets are available offline. Darkstat telemetry remains network-only. */
-const CACHE_PREFIX='elcano-pob-control-pwa-';
-const CACHE_NAME=`${CACHE_PREFIX}2026-10-21-v1.0.0`;
+const CACHE_PREFIX='trafalgar-pob-control-pwa-';
+const CACHE_NAME=`${CACHE_PREFIX}2026-10-30-v1.0.1`;
 const APP_SHELL=[
   './','./index.html','./manifest.webmanifest','./styles.css','./enhancements.css','./dtr-quality.css','./dtr-uplink.css','./dtr-responsive.css','./dtr-calculator.css','./dtr-calculator-mobile.css','./dtr-forum.css',
   './dtr-pwa.js','./recipe-catalog.js','./app.js','./dtr-procurement-prices.js','./dtr-calculator.js','./dtr-forum.js','./dtr-quality.js','./dtr-uplink.js',
-  './assets/elcano-mark.svg'
+  './assets/trafalgar-mark.svg'
 ];
 
 self.addEventListener('install',event=>{
