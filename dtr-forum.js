@@ -145,7 +145,7 @@
     result.push('[i]Available via station communications[/i]', '');
     result.push('[align=center][size=small][i]“Nothing useful stays lost forever.”[/i][/size][/align]');
     result.push('[/quote]');
-    return result.join('\\n');
+    return result.join('\n');
   }
   function inlinePreview(raw) {
     let html = esc(raw);
