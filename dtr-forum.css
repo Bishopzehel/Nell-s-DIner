@@ -129,3 +129,27 @@
  .dtr-forum-preview-meta span{padding-left:3px;font-size:.69rem}
  .dtr-forum-lenses button{font-size:.65rem}
 }
+
+/* Trafalgar Junkyards letterhead preview */
+.dtr-trafalgar-template{background:#fffaf0!important;color:#29251f!important;border-color:rgba(196,122,58,.5)!important}
+.dtr-template-title{text-align:center;padding:8px 8px 14px;border-bottom:1px solid rgba(196,122,58,.38)}
+.dtr-template-title strong{display:block;color:#29251f;font-size:1.15rem;letter-spacing:.045em}
+.dtr-template-title em{display:block;margin-top:6px;color:#735b42}
+.dtr-template-letterhead{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,145px);gap:18px;align-items:center;padding:15px 0}
+.dtr-template-details h3{margin:0 0 12px;color:#C47A3A;font:700 1rem "Oxanium",sans-serif}
+.dtr-template-details p{margin:5px 0;color:#29251f;font-size:.82rem}
+.dtr-template-details p span{color:#b45d1d}
+.dtr-template-subject{margin-top:12px!important;padding-top:9px;border-top:1px solid rgba(196,122,58,.25)}
+.dtr-template-subject u{color:#c5652b;font-weight:700}
+.dtr-template-portrait{text-align:right}
+.dtr-template-portrait img{width:100%;max-height:170px;object-fit:contain}
+.dtr-template-portrait small{display:block;color:#735b42;font-style:italic}
+.dtr-trafalgar-template hr{border:0;border-top:1px solid rgba(196,122,58,.45);margin:12px 0}
+.dtr-trafalgar-template .dtr-forum-preview-message{color:#29251f}
+.dtr-trafalgar-template .dtr-forum-opening{margin:0 0 12px}
+.dtr-trafalgar-template .dtr-forum-preview-indented{padding:0 10px}
+.dtr-trafalgar-template .dtr-forum-preview-message p{color:#29251f}
+.dtr-trafalgar-template .dtr-forum-preview-signoff{display:flex;flex-direction:column;align-items:flex-start;margin-top:18px}
+.dtr-trafalgar-template .dtr-forum-preview-signoff span{color:#735b42;font-style:italic}
+.dtr-template-motto{text-align:center;font-style:italic;color:#735b42!important}
+@media(max-width:560px){.dtr-template-letterhead{grid-template-columns:minmax(0,1fr) 90px;gap:10px}.dtr-template-title strong{font-size:.92rem}.dtr-template-details p{font-size:.74rem}}
