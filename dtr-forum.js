@@ -137,7 +137,7 @@
     result.push('[size=medium][b]Destination :[/b] [color=#FF8000]' + destination + '[/color][/size]', '');
     result.push('[size=large][b]Subject :[/b][/size] [size=medium][color=#FF8040][b][u]' + subject + '[/u][/b][/color][/size]');
     result.push('[/td]');
-    if (right) result.push('[td][align=right][img]' + right + '[/img]' + '[br][size=small][i]' + sender + '[/i][/size][/align][/td]');
+    if (right) result.push('[td][align=right][img]' + right + '[/img][size=small][i]' + sender + '[/i][/size][/align][/td]');
     result.push('[/tr][/table]', '', '[hr]', '', opening, '', body, '');
     result.push('[hr]', '');
     if (closing) result.push(closing, '');
