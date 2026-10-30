@@ -56,8 +56,8 @@
       <p class="dtr-routes-speed-note"><span>DOCKING RESTRICTIONS USE YOUR SELECTED SHIP TYPE</span><span>TRADELANES // 2,500 M/S</span><span>ROUTE TIMES ARE ESTIMATES</span></p>
       <section class="dtr-market-lookup" aria-labelledby="dtrMarketLookupTitle">
         <header class="dtr-market-lookup-head">
-          <div><small>MARKET INTELLIGENCE // TWO-SIDED PRICES</small><h3 id="dtrMarketLookupTitle">Commodity Price Lookup</h3></div>
-          <p>Search a commodity to see bases that report both prices. Compare the buy and sell price, then estimate per-unit margin.</p>
+          <div><small>MARKET INTELLIGENCE // QUOTED PRICES</small><h3 id="dtrMarketLookupTitle">Commodity Price Lookup</h3></div>
+          <p>Search a commodity to see every base with a quoted price. Compare the available buy and sell prices, then estimate per-unit margin.</p>
         </header>
         <div class="dtr-market-lookup-controls">
           <label><span>COMMODITY // SEARCH OR SELECT</span><input id="dtrMarketCommodity" list="dtrMarketCommodityOptions" placeholder="Type or select a commodity…" autocomplete="off"><datalist id="dtrMarketCommodityOptions"></datalist></label>
@@ -66,7 +66,7 @@
           <label><span>SELL TO // BASE BUYS</span><select id="dtrMarketDestination"><option value="">SELECT DESTINATION BASE</option></select></label>
         </div>
         <div class="dtr-market-lookup-results" id="dtrMarketLookupResults" aria-live="polite">
-          <p>Select a commodity to list bases with both prices.</p>
+          <p>Select a commodity to list every base with a price quote.</p>
         </div>
       </section>
       <div class="dtr-routes-workspace">
@@ -142,4 +142,5 @@
         <div id="dtrRoutesDetailBody"></div>
       </dialog>
     </section>
+
 

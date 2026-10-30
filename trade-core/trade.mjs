@@ -55,6 +55,10 @@ export function normalizeDarkstat(pobs, commodities, receivedAt = new Date().toI
         sell: number(market.price_base_buys_for), volume: number(market.volume), originalVolume: number(market.volume),
         stock: null, min: null, max: null, volumes: good.volumes };
       if (!existing) base.offers.push(offer);
+      else {
+        if (!(existing.buy > 0) && offer.buy > 0) existing.buy = offer.buy;
+        if (!(existing.sell > 0) && offer.sell > 0) existing.sell = offer.sell;
+      }
     }
   }
   for (const pob of pobs) {
@@ -62,14 +66,21 @@ export function normalizeDarkstat(pobs, commodities, receivedAt = new Date().toI
     const base = { id: pob.nickname, name: pob.name || pob.nickname, kind: 'pob', system: pob.system_nickname,
       systemName: pob.system_name, pos: vector(pob.base_pos), cash: number(pob.money), space: number(pob.cargospace),
       docking: pob.defense_mode ?? null, fallback: Boolean(pob.is_fallback_info), offers: [] };
-    const seen = new Set();
+    const seen = new Map();
     for (const item of pob.shop_items) {
-      if (!item?.nickname || seen.has(item.nickname) || item.ship_class != null || (item.category && item.category !== 'commodity')) continue;
-      seen.add(item.nickname);
+      if (!item?.nickname || item.ship_class != null || (item.category && item.category !== 'commodity')) continue;
       const good = goodInfo.get(item.nickname);
-      base.offers.push({ id: item.nickname, name: item.name || good?.name || item.nickname,
+      const offer = { id: item.nickname, name: item.name || good?.name || item.nickname,
         buy: number(item.price), sell: number(item.sell_price), stock: number(item.quantity), min: number(item.min_stock), max: number(item.max_stock),
-        volume: number(item.volume) ?? good?.volume ?? null, originalVolume: number(item.original_volume), volumes: good?.volumes || {} });
+        volume: number(item.volume) ?? good?.volume ?? null, originalVolume: number(item.original_volume), volumes: good?.volumes || {} };
+      const existing = seen.get(item.nickname);
+      if (existing) {
+        if (!(existing.buy > 0) && offer.buy > 0) existing.buy = offer.buy;
+        if (!(existing.sell > 0) && offer.sell > 0) existing.sell = offer.sell;
+        continue;
+      }
+      seen.set(item.nickname, offer);
+      base.offers.push(offer);
     }
     bases.set(base.id, base);
   }
@@ -219,3 +230,4 @@ export function repeatTour(legs, first, options, limit = 12) {
   const next = optimizeTour(legs, result.bases, { ...options, capital: result.cash });
   return { count, capped: Boolean(next), profit: total };
 }
+
